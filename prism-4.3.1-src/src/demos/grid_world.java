@@ -29,15 +29,12 @@ package demos;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
 import parser.ast.*;
-import parser.*;
-import parser.visitor.*;
 import prism.PrismLangException;
 import prism.PrismUtils;
 import parser.type.*;
@@ -50,75 +47,114 @@ import prism.PrismLog;
 import prism.Result;
 import prism.UndefinedConstants;
 
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import Jama.Matrix;
 
 /**
- * An example class demonstrating how to control PRISM programmatically,
- * through the functions exposed by the class prism.Prism.
+ * An example class demonstrating how to control PRISM programmatically, through
+ * the functions exposed by the class prism.Prism.
  * 
  * This shows how to load a model from a file and model check some properties,
- * either from a file or specified as a string, and possibly involving constants. 
+ * either from a file or specified as a string, and possibly involving
+ * constants.
  * 
  * See the README for how to link this to PRISM.
-*/ 
-public class grid_world
-{
+ */
+public class grid_world {
+	public static int x_max = 0;
+	public static int y_max = 0;
+	public static int x_l_0 = 0;
+	public static int y_l_0 = 0;
+	public static Matrix P_bad;
+	public static Matrix P_good;
+	public static Matrix P_exp;
+	public static Matrix policy;
 
-	public static void main(String[] args) throws IOException, InterruptedException,ParseException, PrismLangException
-	{
-		//Process proc = Runtime.getRuntime().exec("python /Users/weichaozhou/Documents/Safe_AI_MDP/workspace/grid_world/cirl/run.py");  
-		//proc.waitFor();  
+	public static void main(String[] args) throws IOException, InterruptedException, PrismLangException {
+		// Process proc = Runtime.getRuntime().exec("python
+		// /Users/weichaozhou/Documents/Safe_AI_MDP/workspace/grid_world/cirl/run.py");
+		// proc.waitFor();
 		new grid_world().run();
 	}
-	
+
 	static final public void ConstantDef(ConstantList constantList, ArrayList<String> lines) {
 		String sLastLine = lines.get(0), sCurrentLine = lines.get(1);
-		for(String line: lines) {
-			if(lines.indexOf(line) % 2 == 1) {
+		for (String line : lines) {
+			if (lines.indexOf(line) % 2 == 1) {
 				sCurrentLine = line;
 				try {
-					//Integer.parseInt(sCurrentLine);
-					constantList.addConstant(new ExpressionIdent(sLastLine), new ExpressionLiteral(TypeInt.getInstance(), Integer.parseInt(sCurrentLine)), TypeInt.getInstance());
-				}	catch (NumberFormatException e) {
-					constantList.addConstant(new ExpressionIdent(sLastLine), new ExpressionLiteral(TypeDouble.getInstance(), Double.parseDouble(sCurrentLine)), TypeDouble.getInstance());
+					if (sLastLine.equals("x_max"))
+						x_max = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("y_max"))
+						y_max = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("x_l_0"))
+						x_l_0 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("y_l_0"))
+						y_l_0 = Integer.parseInt(sCurrentLine);
+
+					constantList.addConstant(new ExpressionIdent(sLastLine),
+							new ExpressionLiteral(TypeInt.getInstance(), Integer.parseInt(sCurrentLine)),
+							TypeInt.getInstance());
+				} catch (NumberFormatException e) {
+					constantList.addConstant(new ExpressionIdent(sLastLine),
+							new ExpressionLiteral(TypeDouble.getInstance(), Double.parseDouble(sCurrentLine)),
+							TypeDouble.getInstance());
 				}
-			}
-			else {
+			} else {
 				sLastLine = line;
 			}
 		}
-		constantList.addConstant(new ExpressionIdent("e"), new ExpressionLiteral(TypeDouble.getInstance(), 2.72), TypeDouble.getInstance());
-		constantList.addConstant(new ExpressionIdent("x_min"), new ExpressionLiteral(TypeInt.getInstance(), 0), TypeInt.getInstance());
-		constantList.addConstant(new ExpressionIdent("y_min"), new ExpressionLiteral(TypeInt.getInstance(), 0), TypeInt.getInstance());
-		constantList.addConstant(new ExpressionIdent("x_init"), new ExpressionLiteral(TypeInt.getInstance(), 0), TypeInt.getInstance());
-		constantList.addConstant(new ExpressionIdent("y_init"), new ExpressionLiteral(TypeInt.getInstance(), 0), TypeInt.getInstance());
-		
-		//System.out.println(constantList);
+		constantList.addConstant(new ExpressionIdent("e"), new ExpressionLiteral(TypeDouble.getInstance(), 2.72),
+				TypeDouble.getInstance());
+		constantList.addConstant(new ExpressionIdent("x_min"), new ExpressionLiteral(TypeInt.getInstance(), 0),
+				TypeInt.getInstance());
+		constantList.addConstant(new ExpressionIdent("y_min"), new ExpressionLiteral(TypeInt.getInstance(), 0),
+				TypeInt.getInstance());
+		constantList.addConstant(new ExpressionIdent("x_init"), new ExpressionLiteral(TypeInt.getInstance(), 0),
+				TypeInt.getInstance());
+		constantList.addConstant(new ExpressionIdent("y_init"), new ExpressionLiteral(TypeInt.getInstance(), 0),
+				TypeInt.getInstance());
+
+		// System.out.println(constantList);
 	}
-	
-	static final public void Prop_ConstantDef(ConstantList constantList,int x_init, int y_init, int x_end, int y_end) {
-//		constantList.addConstant(new ExpressionIdent("x_init"), new ExpressionLiteral(TypeInt.getInstance(), x_init), TypeInt.getInstance());
-//		constantList.addConstant(new ExpressionIdent("y_init"), new ExpressionLiteral(TypeInt.getInstance(), y_init), TypeInt.getInstance());
-		constantList.addConstant(new ExpressionIdent("x_end"), new ExpressionLiteral(TypeInt.getInstance(), x_end), TypeInt.getInstance());
-		constantList.addConstant(new ExpressionIdent("y_end"), new ExpressionLiteral(TypeInt.getInstance(), y_end), TypeInt.getInstance());
+
+	static final public void Prop_ConstantDef(ConstantList constantList, int x_init, int y_init, int x_end, int y_end) {
+		// constantList.addConstant(new ExpressionIdent("x_init"), new
+		// ExpressionLiteral(TypeInt.getInstance(), x_init),
+		// TypeInt.getInstance());
+		// constantList.addConstant(new ExpressionIdent("y_init"), new
+		// ExpressionLiteral(TypeInt.getInstance(), y_init),
+		// TypeInt.getInstance());
+		constantList.addConstant(new ExpressionIdent("x_end"), new ExpressionLiteral(TypeInt.getInstance(), x_end),
+				TypeInt.getInstance());
+		constantList.addConstant(new ExpressionIdent("y_end"), new ExpressionLiteral(TypeInt.getInstance(), y_end),
+				TypeInt.getInstance());
 
 	}
-	
+
 	static final public void Prop_PropertyDef(PropertiesFile pf_expert) {
 		String property1 = "Pmin=?[F (x=x_end & y=y_end)]";
 		pf_expert.addProperty(new Property(new ExpressionLiteral(TypeDouble.getInstance(), property1)));
 	}
-	
-	static final public void FormulaDef(FormulaList formulaList, ArrayList<String> lines) {
+
+	static final public void ParsePolicy(ArrayList<String> lines) {
+		policy = new Matrix(new double[lines.size()][lines.get(0).split(":").length]);
+		for (int i = 0; i < lines.size(); i++) {
+			String[] actions = lines.get(i).split(":");
+			for (int j = 0; j < actions.length; j++) {
+				policy.set(i, j, Double.parseDouble(actions[j]));
+			}
+		}
+	}
+
+	static final public void FormulaDef(FormulaList formulaList, Matrix policy) {
 		 String stay = new String("("), right = new String("("), down = new String("("), left = new String("("), up = new String("("), sink = new String("(");
-		 for(int y = 0; y < lines.size(); y++) { 
-			 String[] actions = lines.get(y).split(":");
-			 for(int x = 0; x < actions.length; x++)	{
-				 switch((int)Double.parseDouble(actions[x]))	{
+		 for(int y = 0; y < policy.getColumnDimension(); y++) { 
+			 for(int x = 0; x < policy.getRowDimension(); x++)	{
+				 switch((int)policy.get(y, x))	{
 			      case 0:	stay = build_expr(stay, x, y);	break;
 			      case 1:	right = build_expr(right, x, y);	break;
 			      case 2:	down = build_expr(down, x, y);	break;
@@ -130,12 +166,18 @@ public class grid_world
 			 }
 		 }
 		 
-		 stay = stay + ")";
-		 right = right + ")";
-		 down = down + ")";
-		 left = left + ")";
-		 up = up + ")";
-		 sink = sink + ")";
+		 if(stay.equals("(")) stay = "false";
+		 else	stay = stay + ")";
+		 if(right.equals("(")) right = "false";
+		 else right = right + ")";
+		 if(down.equals("(")) down = "false";
+		 else down = down + ")";
+		 if(left.equals("(")) left= "false";
+		 else left = left + ")";
+		 if(up.equals("(")) up = "false";
+		 else up = up + ")";
+		 if(sink.equals("(")) sink = "false";
+		 else sink = sink + ")";
 		 
 		 Expression stay_expr = new ExpressionLiteral(TypeBool.getInstance(), stay);
 		 Expression right_expr = new ExpressionLiteral(TypeBool.getInstance(), right);
@@ -143,105 +185,254 @@ public class grid_world
 		 Expression left_expr = new ExpressionLiteral(TypeBool.getInstance(), left);
 		 Expression up_expr = new ExpressionLiteral(TypeBool.getInstance(), up);
 		 //Expression sink_expr = new ExpressionLiteral(TypeBool.getInstance(), sink);
-		 
-		 formulaList.addFormula(new ExpressionIdent("stay"), stay_expr);
-		 formulaList.addFormula(new ExpressionIdent("right"), right_expr);
-		 formulaList.addFormula(new ExpressionIdent("down"), down_expr);
-		 formulaList.addFormula(new ExpressionIdent("left"), left_expr);
-		 formulaList.addFormula(new ExpressionIdent("up"), up_expr);
+		 if(formulaList.size() == 0) {
+		 	formulaList.addFormula(new ExpressionIdent("stay"), stay_expr);
+		 	formulaList.addFormula(new ExpressionIdent("right"), right_expr);
+		 	formulaList.addFormula(new ExpressionIdent("down"), down_expr);
+		 	formulaList.addFormula(new ExpressionIdent("left"), left_expr);
+		 	formulaList.addFormula(new ExpressionIdent("up"), up_expr);
+		 } else {
+			 formulaList.setFormula(formulaList.getFormulaIndex("stay"), stay_expr);
+			 formulaList.setFormula(formulaList.getFormulaIndex("right"), right_expr);
+			 formulaList.setFormula(formulaList.getFormulaIndex("down"), down_expr);
+			 formulaList.setFormula(formulaList.getFormulaIndex("left"), left_expr);
+			 formulaList.setFormula(formulaList.getFormulaIndex("up"), up_expr);
+		 }
 		 //formulaList.addFormula(new ExpressionIdent("sink"), sink_expr);
 		 //System.out.println(formulaList);
 	 }
-		 
+
 	static final public String build_expr(String action, int x, int y) {
-		if(action.equals("(")) {
-			action = action + "(x=" + String.valueOf(x) + " & y=" + String.valueOf(y) + ")";  
+		if (action.equals("(")) {
+			action = action + "(x=" + String.valueOf(x) + " & y=" + String.valueOf(y) + ")";
 		} else {
-			action = action + " | (x=" + String.valueOf(x) + " & y=" + String.valueOf(y) + ")";  
+			action = action + " | (x=" + String.valueOf(x) + " & y=" + String.valueOf(y) + ")";
 		}
 		return action;
 	}
-	
-	static final public Module Module(ConstantList constantList, FormulaList formulaList) {
-		Module m = new Module("grid_world");
-		m.setName("grid_world");
-		m.addDeclaration(new Declaration("x", new DeclarationInt(new ExpressionLiteral(TypeInt.getInstance(), 0), constantList.getConstant(constantList.getConstantIndex("x_max")))));
-		m.addDeclaration(new Declaration("y", new DeclarationInt(new ExpressionLiteral(TypeInt.getInstance(), 0), constantList.getConstant(constantList.getConstantIndex("y_max")))));
+
+	static final public Module Module(String name, ConstantList constantList, FormulaList formulaList) {
+		Module m = new Module(name);
+		m.setName(name);
+		m.addDeclaration(new Declaration("x", new DeclarationInt(new ExpressionLiteral(TypeInt.getInstance(), 0),
+				constantList.getConstant(constantList.getConstantIndex("x_max")))));
+		m.addDeclaration(new Declaration("y", new DeclarationInt(new ExpressionLiteral(TypeInt.getInstance(), 0),
+				constantList.getConstant(constantList.getConstantIndex("y_max")))));
 		build_cmd(m, constantList, formulaList);
 		return m;
 	}
-	
+
 	static final public void build_cmd(Module m, ConstantList constantList, FormulaList formulaList) {
-		for(int i = 1; i < formulaList.size(); i++) {
+		for (int i = 0; i < formulaList.size(); i++) {
 			Command c = new Command();
 			Updates us = new Updates();
 			Update u = new Update();
 			c.setSynch(formulaList.getFormulaName(i));
 			c.setSynchIndex(i);
-			c.setGuard(new ExpressionLiteral(TypeBool.getInstance(), formulaList.getFormulaNameIdent(i)+"=true"));
-			
+			c.setGuard(new ExpressionLiteral(TypeBool.getInstance(), formulaList.getFormulaNameIdent(i) + "=true"));
+
+			if (i == 0) {
+				u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "x"));
+				u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));
+				;
+				us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "1"), u);
+				c.setUpdates(us);
+				m.addCommand(c);
+				continue;
+			}
 			u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "x"));
-			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));;
+			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));
+			;
 			us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "(1-p)/4"), u);
 			u = new Update();
 			u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "(x+1>x_max?x-1:x+1)"));
-			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));;
+			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));
+			;
 			us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "(1-p)/4"), u);
 			u = new Update();
 			u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "x"));
-			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "(y+1>y_max?y-1:y+1)"));;
+			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "(y+1>y_max?y-1:y+1)"));
+			;
 			us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "(1-p)/4"), u);
 			u = new Update();
 			u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "(x-1<x_min?x+1:x-1)"));
-			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));;
+			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));
+			;
 			us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "(1-p)/4"), u);
 			u = new Update();
 			u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "x"));
-			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "(y-1<y_min?y+1:y-1)"));;
+			u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "(y-1<y_min?y+1:y-1)"));
+			;
 			us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "(1-p)/4"), u);
-			
+
 			us.setProbability(i, new ExpressionLiteral(TypeDouble.getInstance(), "p"));
 			u = new Update();
 			c.setUpdates(us);
 			m.addCommand(c);
-		}
-	/**	Command c = new Command();
-		Updates us = new Updates();
-		Update u = new Update();
-		c.setSynch(formulaList.getFormulaName(formulaList.size()-1));
-		c.setSynchIndex(formulaList.size()-1);
-		c.setGuard(formulaList.getFormulaNameIdent(formulaList.size()-1));
-		u.addElement(new ExpressionIdent("x"), new ExpressionLiteral(TypeInt.getInstance(), "x"));
-		u.addElement(new ExpressionIdent("y"), new ExpressionLiteral(TypeInt.getInstance(), "y"));;
-		us.addUpdate(new ExpressionLiteral(TypeDouble.getInstance(), "1"), u);
-		m.addCommand(c);**/
+		} /**
+			 * Command c = new Command(); Updates us = new Updates(); Update u =
+			 * new Update(); c.setSynch(formulaList.getFormulaName(0));
+			 * c.setSynchIndex(0); c.setGuard(new
+			 * ExpressionLiteral(TypeBool.getInstance(),
+			 * formulaList.getFormulaNameIdent(0)+"=true")); u.addElement(new
+			 * ExpressionIdent("x"), new
+			 * ExpressionLiteral(TypeInt.getInstance(), "x")); u.addElement(new
+			 * ExpressionIdent("y"), new
+			 * ExpressionLiteral(TypeInt.getInstance(), "y"));; us.addUpdate(new
+			 * ExpressionLiteral(TypeDouble.getInstance(), "1"), u);
+			 * m.addCommand(c);
+			 **/
 	}
-	
-	static final public void run() throws ParseException, InterruptedException, FileNotFoundException	{
+
+	static final public void set_good(Prism prism, ModulesFile mf_good, double epsilon)
+			throws FileNotFoundException, PrismException {
+		P_good = new Matrix(new double[y_max + 1][x_max + 1]);
+		policy = new Matrix(new double[y_max + 1][x_max + 1]);
+		for (int i = 0; i <= x_max; i++) {
+			for (int j = 0; j <= y_max; j++) {
+				policy.set(i, j, 0.0);
+			}
+		}
+		FormulaDef(mf_good.getFormulaList(), policy);
+		Module m_good = Module("grid_good", mf_good.getConstantList(), mf_good.getFormulaList());
+		mf_good.addModule(m_good);
+		Double diff = Double.MAX_VALUE;
+		while (diff > epsilon) {
+			diff = Double.MIN_VALUE;
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					double good = P_good.get(i, j);
+					if (P_good.get(i, x_max - Math.abs(x_max - j - 1)) < good) {
+						policy.set(i, j, 1);
+						good = P_good.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if (P_good.get(y_max - Math.abs(y_max - i - 1), j) < good) {
+						policy.set(i, j, 2);
+						good = P_good.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if (P_good.get(i, Math.abs(j - 1)) < good) {
+						policy.set(i, j, 3);
+						good = P_good.get(i, Math.abs(j - 1));
+					} else if (P_good.get(Math.abs(i - 1), j) < good) {
+						policy.set(i, j, 4);
+						good = P_good.get(Math.abs(i - 1), j);
+					} else
+						policy.set(i, j, 0);
+				}
+			}
+			FormulaDef(mf_good.getFormulaList(), policy);
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					mf_good.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
+							"y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
+					mf_good.tidyUp();
+					prism.loadPRISMModel(mf_good);
+					PrintStream ps_console = System.out;
+					PrintStream ps_file = new PrintStream(new FileOutputStream(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm")));
+					System.setOut(ps_file);
+					System.out.println(mf_good);
+					System.setOut(ps_console);
+					ModulesFile modulesFile = prism.parseModelFile(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm"));
+					prism.loadPRISMModel(modulesFile);
+					PropertiesFile propertiesFile = prism.parsePropertiesString(mf_good, "P=? [F x = 4 & y = 5 ]");
+					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
+					if (Math.abs(P_good.get(i, j) - (double) result.getResult()) > diff)
+						diff = Math.abs(P_good.get(i, j) - (double) result.getResult());
+					P_good.set(i, j, (double) result.getResult());
+				}
+			}
+		}
+	}
+
+	static final public void set_bad(Prism prism, ModulesFile mf_bad, double epsilon)
+			throws FileNotFoundException, PrismException {
+		P_bad = new Matrix(new double[y_max + 1][x_max + 1]);
+		policy = new Matrix(new double[y_max + 1][x_max + 1]);
+		for (int i = 0; i <= x_max; i++) {
+			for (int j = 0; j <= y_max; j++) {
+				policy.set(i, j, 0.0);
+			}
+		}
+		FormulaDef(mf_bad.getFormulaList(), policy);
+		Module m_bad = Module("grid_bad", mf_bad.getConstantList(), mf_bad.getFormulaList());
+		mf_bad.addModule(m_bad);
+		Double diff = Double.MAX_VALUE;
+		while (diff > epsilon) {
+			diff = Double.MIN_VALUE;
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					double bad = P_bad.get(i, j);
+					if (P_bad.get(i, x_max - Math.abs(x_max - j - 1)) > bad) {
+						policy.set(i, j, 1);
+						bad = P_bad.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if (P_bad.get(y_max - Math.abs(y_max - i - 1), j) > bad) {
+						policy.set(i, j, 2);
+						bad = P_bad.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if (P_bad.get(i, Math.abs(j - 1)) > bad) {
+						policy.set(i, j, 3);
+						bad = P_bad.get(i, Math.abs(j - 1));
+					} else if (P_bad.get(Math.abs(i - 1), j) > bad) {
+						policy.set(i, j, 4);
+						bad = P_bad.get(Math.abs(i - 1), j);
+					} else
+						policy.set(i, j, 0);
+				}
+			}
+			FormulaDef(mf_bad.getFormulaList(), policy);
+			mf_bad.tidyUp();
+			System.out.println("hehe");
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					mf_bad.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
+							"y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
+					PrintStream ps_console = System.out;
+					PrintStream ps_file = new PrintStream(new FileOutputStream(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm")));
+					System.setOut(ps_file);
+					System.out.println(mf_bad);
+					System.setOut(ps_console);
+					ModulesFile modulesFile = prism.parseModelFile(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm"));
+					prism.loadPRISMModel(modulesFile);
+					PropertiesFile propertiesFile = prism.parsePropertiesString(mf_bad, "P=? [F x = 4 & y = 5 ]");
+					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
+					if (Math.abs(P_bad.get(i, j) - (double) result.getResult()) > diff)
+						diff = Math.abs(P_bad.get(i, j) - (double) result.getResult());
+					P_bad.set(i, j, (double) result.getResult());
+				}
+			}
+		}
+	}
+
+	static final public void run() throws InterruptedException, FileNotFoundException {
 		try {
 			// Create a log for PRISM output (hidden or stdout)
 			PrismLog mainLog = new PrismDevNullLog();
-			//PrismLog mainLog = new PrismFileLog("stdout");
-			
-			// Initialise PRISM engine 
-			Prism prism = new Prism(mainLog); 
-			prism.initialise(); 
-			
+			// PrismLog mainLog = new PrismFileLog("stdout");
+
+			// Initialise PRISM engine
+			Prism prism = new Prism(mainLog);
+			prism.initialise();
+
 			ModulesFile mf_expert = new ModulesFile();
 			ModulesFile mf_demo = new ModulesFile();
-			
+			ModulesFile mf_good = new ModulesFile();
+			ModulesFile mf_bad = new ModulesFile();
+
 			mf_expert.setModelType(ModelType.DTMC);
 			mf_demo.setModelType(mf_expert.getModelType());
-			
+			mf_good.setModelType(mf_expert.getModelType());
+			mf_bad.setModelType(mf_expert.getModelType());
+
 			ArrayList<String> files = new ArrayList<String>();
-			String STATE_SPACE = "/home/zwc662/Documents/prism-4.3.1-src/src/demos/state_space";
-			String EXPERT_POLICY = "/home/zwc662/Documents/prism-4.3.1-src/src/demos/expert_policy";
-			String DEMO_POLICY = "/home/zwc662/Documents/prism-4.3.1-src/src/demos/demo_policy";
+			String STATE_SPACE = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/state_space";
+			String EXPERT_POLICY = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/expert_policy";
+			String DEMO_POLICY = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/demo_policy";
 			files.add(STATE_SPACE);
 			files.add(EXPERT_POLICY);
 			files.add(DEMO_POLICY);
 			ArrayList<String> lines = new ArrayList<String>();
-			for(String file: files) {
+			for (String file : files) {
 				BufferedReader br = null;
 				FileReader fr = null;
 				try {
@@ -252,125 +443,103 @@ public class grid_world
 					while ((line = br.readLine()) != null) {
 						lines.add(line);
 					}
-					if(file.equals(STATE_SPACE)) {	
-						ConstantDef(mf_expert.getConstantList(), lines);	
+					if (file.equals(STATE_SPACE)) {
+						ConstantDef(mf_expert.getConstantList(), lines);
 						mf_demo.setConstantList(mf_expert.getConstantList());
+						mf_good.setConstantList(mf_expert.getConstantList());
+						mf_bad.setConstantList(mf_expert.getConstantList());
 						lines.clear();
-						}
-					if(file.equals(EXPERT_POLICY)) {	
-						FormulaDef(mf_expert.getFormulaList(), lines);	
+					}
+					if (file.equals(EXPERT_POLICY)) {
+						ParsePolicy(lines);
+						FormulaDef(mf_expert.getFormulaList(), policy);
 						lines.clear();
-						}
-					if(file.equals(DEMO_POLICY)) {	
-						FormulaDef(mf_demo.getFormulaList(), lines);	
+					}
+					if (file.equals(DEMO_POLICY)) {
+						ParsePolicy(lines);
+						FormulaDef(mf_demo.getFormulaList(), policy);
 						lines.clear();
-						}
-				} catch (IOException e) {	
+					}
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			
 
-			Module m_expert = Module(mf_expert.getConstantList(), mf_expert.getFormulaList());
-            mf_expert.addModule(m_expert);
-            mf_expert.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x = 5 & y = 5"));
-            
-            mf_expert.tidyUp();
-            Module m_demo = Module(mf_demo.getConstantList(), mf_expert.getFormulaList());
-            mf_demo.addModule(m_demo);
-            mf_demo.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x =5 & y = 4"));
-            mf_demo.tidyUp();
-            
-            
-            //RewardStruct rs = RewardStruct();
-            //mf.addRewardStruct(rs);
-            
-            //Expression init = Init();
-            //mf.setInitialStates(init); initCount++; if (initCount == 2) initDupe = init;
-           
-            prism.loadPRISMModel(mf_expert);
-            
-            PrintStream ps_console = System.out;
-	        PrintStream ps_file = new PrintStream(new FileOutputStream(new File("/home/zwc662/Documents/prism-4.3.1-src/src/demos/grid_world.pm")));
-	        System.setOut(ps_file);
+			Module m_expert = Module("grid_world", mf_expert.getConstantList(), mf_expert.getFormulaList());
+			mf_expert.addModule(m_expert);
+			mf_expert.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x = 3 & y = 0"));
+
+			mf_expert.tidyUp();
+			Module m_demo = Module("grid_demo", mf_demo.getConstantList(), mf_expert.getFormulaList());
+			mf_demo.addModule(m_demo);
+			mf_demo.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x =5 & y = 4"));
+			mf_demo.tidyUp();
+
+			// RewardStruct rs = RewardStruct();
+			// mf.addRewardStruct(rs);
+
+			// Expression init = Init();
+			// mf.setInitialStates(init); initCount++; if (initCount == 2)
+			// initDupe = init;
+
+			prism.loadPRISMModel(mf_expert);
+
+			PrintStream ps_console = System.out;
+			PrintStream ps_file = new PrintStream(new FileOutputStream(
+					new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+			System.setOut(ps_file);
 			System.out.println(mf_expert);
-			
+
 			System.setOut(ps_console);
-	        System.out.println(mf_expert);
-			
-	        ModulesFile modulesFile = prism.parseModelFile(new File("/home/zwc662/Documents/prism-4.3.1-src/src/demos/grid_world.pm"));
+			System.out.println(mf_expert);
+
+			ModulesFile modulesFile = prism
+					.parseModelFile(new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
 			prism.loadPRISMModel(modulesFile);
 			// Parse and load a properties model for the model
-			PropertiesFile propertiesFile = prism.parsePropertiesFile(modulesFile, new File("/home/zwc662/Documents/prism-4.3.1-src/src/demos/grid_world.pctl"));
+			PropertiesFile propertiesFile = prism.parsePropertiesFile(modulesFile,
+					new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
 			Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 			System.out.println(result.getResult());
-			//System.out.println(mf_demo);
-			//PropertiesFile pf_expert =  new PropertiesFile(mf_expert);
-			//Prop_ConstantDef(propertiesFile.getConstantList(), 0, 0, 1, 1);
-			//System.out.println(pf_expert.getConstantList());
-			
-			propertiesFile = prism.parsePropertiesString(mf_expert, "filter(min, P=? [F x = 4 & y = 5], (x!=4|y!=5)&(x!=2|y!=2)&(x!=5|y!=2))");	
-			result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
-			System.out.println(result.getResult());
-			
-			
-			
-			
-			/**
-			List<String> consts = pf_expert.getUndefinedConstants();
-			if(consts.isEmpty() != true) {
-				for(int i = 0; i<7; i++) {
-					for(int j = 0; j<7; j++) {
-						ArrayList<Object> values = new ArrayList<Object>();
-						values.add(i);
-						values.add(j);
-						Values Values = new Values();
-						//System.out.println(pf_expert.getUndefinedConstants());
-						Values.setValue(pf_expert.getUndefinedConstants().get(0), i);
-						Values.setValue(pf_expert.getUndefinedConstants().get(1), j);
-						//System.out.println(Values);
-						pf_expert.setUndefinedConstants(Values);
-						
-					}
+			System.out.println(prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(1)).getResult());
+			// System.out.println(mf_demo);
+			// PropertiesFile pf_expert = new PropertiesFile(mf_expert);
+			// Prop_ConstantDef(propertiesFile.getConstantList(), 0, 0, 1, 1);
+			// System.out.println(pf_expert.getConstantList());
+
+			P_exp = new Matrix(new double[y_max + 1][x_max + 1]);
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					mf_expert.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
+							"x = " + Integer.toString(j) + " & y = " + Integer.toString(i)));
+
+					ps_console = System.out;
+					ps_file = new PrintStream(new FileOutputStream(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+					System.setOut(ps_file);
+					System.out.println(mf_expert);
+					System.setOut(ps_console);
+					modulesFile = prism.parseModelFile(
+							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+					prism.loadPRISMModel(modulesFile);
+					propertiesFile = prism.parsePropertiesString(mf_expert, "P=? [F x = 4 & y = 5 ]");
+					result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
+					// System.out.println(result.getResult());
+					P_exp.set(i, j, (double) result.getResult());
+					System.out.println(P_exp.get(i, j));
 				}
-				
 			}
 
-			// Model check the second property from the file
-			System.out.println("which has an undefined constant, which we check over a range 0,1,2");
-			UndefinedConstants undefConsts = new UndefinedConstants(modulesFile, propertiesFile, propertiesFile.getPropertyObject(1));
-			undefConsts.defineUsingConstSwitch(constName + "=0:2");
-			int n = undefConsts.getNumPropertyIterations();
-			for (int i = 0; i < n; i++) {
-				Values valsExpt = undefConsts.getPFConstantValues();
-				propertiesFile.setUndefinedConstants(valsExpt);
-				System.out.println(propertiesFile.getPropertyObject(1) + " for " + valsExpt);
-				result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(1));
-				System.out.println(result.getResult());
-				undefConsts.iterateProperty();
-			}
+			set_bad(prism, mf_bad, 0.01);
+			set_good(prism, mf_good, 0.01);
 
-			// Model check a property specified as a string
-			propertiesFile = prism.parsePropertiesString(modulesFile, "P=?[F<=5 s=7]");
-			System.out.println(propertiesFile.getPropertyObject(0));
-			result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
-			System.out.println(result.getResult());
-
-			// Model check an additional property specified as a string
-			
-			result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
-			System.out.println(result.getResult());
-
-			// Close down PRISM
-			prism.closeDown();
-			
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: " + e.getMessage());
 			System.exit(1);
-**/		} catch (PrismException e) {
+		} catch (PrismException e) {
 			System.out.println("Error: " + e.getMessage());
 			System.exit(1);
 		}
-		
+
 	}
 }
