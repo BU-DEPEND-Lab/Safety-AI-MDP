@@ -68,6 +68,11 @@ public class grid_world {
 	public static int y_max = 0;
 	public static int x_l_0 = 0;
 	public static int y_l_0 = 0;
+	public static int x_h_0 = 0;
+	public static int y_h_0 = 0;
+	public static int x_h_1 = 0;
+	public static int y_h_1 = 0;
+	public static double p = 0.0;
 	public static Matrix P_bad;
 	public static Matrix P_good;
 	public static Matrix P_exp;
@@ -94,6 +99,16 @@ public class grid_world {
 						x_l_0 = Integer.parseInt(sCurrentLine);
 					else if (sLastLine.equals("y_l_0"))
 						y_l_0 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("x_h_0"))
+						x_h_0 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("y_h_0"))
+						y_h_0 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("x_h_1"))
+						x_h_1 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("y_h_1"))
+						y_h_1 = Integer.parseInt(sCurrentLine);
+					else if (sLastLine.equals("p"))
+						p = Double.parseDouble(sCurrentLine);
 
 					constantList.addConstant(new ExpressionIdent(sLastLine),
 							new ExpressionLiteral(TypeInt.getInstance(), Integer.parseInt(sCurrentLine)),
@@ -290,57 +305,69 @@ public class grid_world {
 		policy = new Matrix(new double[y_max + 1][x_max + 1]);
 		for (int i = 0; i <= x_max; i++) {
 			for (int j = 0; j <= y_max; j++) {
-				policy.set(i, j, 0.0);
+				policy.set(i, j, 1.0);
 			}
 		}
+		policy.set(y_l_0, x_l_0, 0.0);
+		policy.set(y_h_0, x_h_0, 0.0);
+		policy.set(y_h_1, x_h_1, 0.0);
+
 		FormulaDef(mf_good.getFormulaList(), policy);
 		Module m_good = Module("grid_good", mf_good.getConstantList(), mf_good.getFormulaList());
 		mf_good.addModule(m_good);
+
 		Double diff = Double.MAX_VALUE;
 		while (diff > epsilon) {
-			diff = Double.MIN_VALUE;
+			diff = 0.0;
+			
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
-					double good = P_good.get(i, j);
-					if (P_good.get(i, x_max - Math.abs(x_max - j - 1)) < good) {
-						policy.set(i, j, 1);
-						good = P_good.get(i, x_max - Math.abs(x_max - j - 1));
-					} else if (P_good.get(y_max - Math.abs(y_max - i - 1), j) < good) {
-						policy.set(i, j, 2);
-						good = P_good.get(y_max - Math.abs(y_max - i - 1), j);
-					} else if (P_good.get(i, Math.abs(j - 1)) < good) {
-						policy.set(i, j, 3);
-						good = P_good.get(i, Math.abs(j - 1));
-					} else if (P_good.get(Math.abs(i - 1), j) < good) {
-						policy.set(i, j, 4);
-						good = P_good.get(Math.abs(i - 1), j);
-					} else
-						policy.set(i, j, 0);
-				}
-			}
-			FormulaDef(mf_good.getFormulaList(), policy);
-			for (int i = 0; i <= y_max; i++) {
-				for (int j = 0; j <= x_max; j++) {
-					mf_good.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
-							"y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
+					mf_good.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
 					mf_good.tidyUp();
-					prism.loadPRISMModel(mf_good);
 					PrintStream ps_console = System.out;
-					PrintStream ps_file = new PrintStream(new FileOutputStream(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm")));
+					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm")));
 					System.setOut(ps_file);
 					System.out.println(mf_good);
 					System.setOut(ps_console);
-					ModulesFile modulesFile = prism.parseModelFile(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm"));
-					prism.loadPRISMModel(modulesFile);
-					PropertiesFile propertiesFile = prism.parsePropertiesString(mf_good, "P=? [F x = 4 & y = 5 ]");
+					//System.out.println(mf_good);
+					ModulesFile mf = prism.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm"));
+					prism.loadPRISMModel(mf);
+					PropertiesFile propertiesFile = prism.parsePropertiesString(mf, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
 					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 					if (Math.abs(P_good.get(i, j) - (double) result.getResult()) > diff)
 						diff = Math.abs(P_good.get(i, j) - (double) result.getResult());
 					P_good.set(i, j, (double) result.getResult());
 				}
 			}
+			
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					double good = P_good.get(i, j);
+					double chaos = (1-p) * 0.25 * (P_good.get(i, x_max - Math.abs(x_max - j - 1)) + P_good.get(y_max - Math.abs(y_max - i - 1), j) + P_good.get(i, Math.abs(j - 1)) + P_good.get(Math.abs(i - 1), j));
+					if (chaos + p * P_good.get(i, x_max - Math.abs(x_max - j - 1)) < good) {
+						policy.set(i, j, 1);
+						good = chaos + p * P_good.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if (chaos + p * P_good.get(y_max - Math.abs(y_max - i - 1), j) < good) {
+						policy.set(i, j, 2);
+						good = chaos + p * P_good.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if (chaos + p * P_good.get(i, Math.abs(j - 1)) < good) {
+						policy.set(i, j, 3);
+						good = chaos + p * P_good.get(i, Math.abs(j - 1));
+					} else if (chaos + p * P_good.get(Math.abs(i - 1), j) < good) {
+						policy.set(i, j, 4);
+						good = chaos + p * P_good.get(Math.abs(i - 1), j);
+					} 
+					policy.set(y_l_0, x_l_0, 0);
+					policy.set(y_h_0, x_h_0, 0);
+					policy.set(y_h_1, x_h_1, 0);
+					
+					
+					
+				}
+			}
+			
+			FormulaDef(mf_good.getFormulaList(), policy);
+			
 		}
 	}
 
@@ -350,57 +377,69 @@ public class grid_world {
 		policy = new Matrix(new double[y_max + 1][x_max + 1]);
 		for (int i = 0; i <= x_max; i++) {
 			for (int j = 0; j <= y_max; j++) {
-				policy.set(i, j, 0.0);
+				policy.set(i, j, 1.0);
 			}
 		}
+		policy.set(y_l_0, x_l_0, 0.0);
+		policy.set(y_h_0, x_h_0, 0.0);
+		policy.set(y_h_1, x_h_1, 0.0);
+		
 		FormulaDef(mf_bad.getFormulaList(), policy);
 		Module m_bad = Module("grid_bad", mf_bad.getConstantList(), mf_bad.getFormulaList());
 		mf_bad.addModule(m_bad);
+
 		Double diff = Double.MAX_VALUE;
 		while (diff > epsilon) {
-			diff = Double.MIN_VALUE;
-			for (int i = 0; i <= y_max; i++) {
-				for (int j = 0; j <= x_max; j++) {
-					double bad = P_bad.get(i, j);
-					if (P_bad.get(i, x_max - Math.abs(x_max - j - 1)) > bad) {
-						policy.set(i, j, 1);
-						bad = P_bad.get(i, x_max - Math.abs(x_max - j - 1));
-					} else if (P_bad.get(y_max - Math.abs(y_max - i - 1), j) > bad) {
-						policy.set(i, j, 2);
-						bad = P_bad.get(y_max - Math.abs(y_max - i - 1), j);
-					} else if (P_bad.get(i, Math.abs(j - 1)) > bad) {
-						policy.set(i, j, 3);
-						bad = P_bad.get(i, Math.abs(j - 1));
-					} else if (P_bad.get(Math.abs(i - 1), j) > bad) {
-						policy.set(i, j, 4);
-						bad = P_bad.get(Math.abs(i - 1), j);
-					} else
-						policy.set(i, j, 0);
-				}
-			}
-			FormulaDef(mf_bad.getFormulaList(), policy);
-			mf_bad.tidyUp();
-			System.out.println("hehe");
+			diff = 0.0;
+
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
 					mf_bad.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
 							"y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
+					mf_bad.tidyUp();
 					PrintStream ps_console = System.out;
-					PrintStream ps_file = new PrintStream(new FileOutputStream(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm")));
+					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm")));
 					System.setOut(ps_file);
 					System.out.println(mf_bad);
 					System.setOut(ps_console);
-					ModulesFile modulesFile = prism.parseModelFile(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm"));
-					prism.loadPRISMModel(modulesFile);
-					PropertiesFile propertiesFile = prism.parsePropertiesString(mf_bad, "P=? [F x = 4 & y = 5 ]");
+					ModulesFile mf = prism.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm"));
+					prism.loadPRISMModel(mf);
+					
+					PropertiesFile propertiesFile = prism.parsePropertiesString(mf, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
 					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 					if (Math.abs(P_bad.get(i, j) - (double) result.getResult()) > diff)
-						diff = Math.abs(P_bad.get(i, j) - (double) result.getResult());
-					P_bad.set(i, j, (double) result.getResult());
+						diff = Math.abs(P_bad.get(i, j) - (double)result.getResult());
+						P_bad.set(i, j,  (double) result.getResult());
 				}
 			}
+			
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					double bad = P_bad.get(i, j);
+					double chaos = (1-p) * 0.25 * (P_bad.get(i, x_max - Math.abs(x_max - j - 1)) + P_bad.get(y_max - Math.abs(y_max - i - 1), j) + P_bad.get(i, Math.abs(j - 1)) + P_bad.get(Math.abs(i - 1), j));
+					if (chaos + p * P_bad.get(i, x_max - Math.abs(x_max - j - 1)) > bad) {
+						policy.set(i, j, 1);
+						bad = chaos + p * P_bad.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if (chaos + p * P_bad.get(y_max - Math.abs(y_max - i - 1), j) > bad) {
+						policy.set(i, j, 2);
+						bad = chaos + p * P_bad.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if (chaos + p * P_bad.get(i, Math.abs(j - 1)) > bad) {
+						policy.set(i, j, 3);
+						bad = chaos + p * P_bad.get(i, Math.abs(j - 1));
+					} else if (chaos + p * P_bad.get(Math.abs(i - 1), j) > bad) {
+						policy.set(i, j, 4);
+						bad = chaos + p * P_bad.get(Math.abs(i - 1), j);
+					}
+					
+					policy.set(y_l_0, x_l_0, 0);
+					policy.set(y_h_0, x_h_0, 0);
+					policy.set(y_h_1, x_h_1, 0);
+					
+				}
+			}
+			
+			
+			FormulaDef(mf_bad.getFormulaList(), policy);
 		}
 	}
 
@@ -425,9 +464,9 @@ public class grid_world {
 			mf_bad.setModelType(mf_expert.getModelType());
 
 			ArrayList<String> files = new ArrayList<String>();
-			String STATE_SPACE = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/state_space";
-			String EXPERT_POLICY = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/expert_policy";
-			String DEMO_POLICY = "/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/demo_policy";
+			String STATE_SPACE = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/state_space";
+			String EXPERT_POLICY = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/expert_policy";
+			String DEMO_POLICY = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/demo_policy";
 			files.add(STATE_SPACE);
 			files.add(EXPERT_POLICY);
 			files.add(DEMO_POLICY);
@@ -486,7 +525,7 @@ public class grid_world {
 
 			PrintStream ps_console = System.out;
 			PrintStream ps_file = new PrintStream(new FileOutputStream(
-					new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+					new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
 			System.setOut(ps_file);
 			System.out.println(mf_expert);
 
@@ -494,11 +533,11 @@ public class grid_world {
 			System.out.println(mf_expert);
 
 			ModulesFile modulesFile = prism
-					.parseModelFile(new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+					.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
 			prism.loadPRISMModel(modulesFile);
 			// Parse and load a properties model for the model
 			PropertiesFile propertiesFile = prism.parsePropertiesFile(modulesFile,
-					new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
+					new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
 			Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 			System.out.println(result.getResult());
 			System.out.println(prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(1)).getResult());
@@ -515,12 +554,12 @@ public class grid_world {
 
 					ps_console = System.out;
 					ps_file = new PrintStream(new FileOutputStream(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+							new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
 					System.setOut(ps_file);
 					System.out.println(mf_expert);
 					System.setOut(ps_console);
 					modulesFile = prism.parseModelFile(
-							new File("/home/zwc662/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+							new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
 					prism.loadPRISMModel(modulesFile);
 					propertiesFile = prism.parsePropertiesString(mf_expert, "P=? [F x = 4 & y = 5 ]");
 					result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
@@ -531,8 +570,39 @@ public class grid_world {
 			}
 
 			set_bad(prism, mf_bad, 0.01);
+			System.out.println("hehe bad");
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					System.out.print(policy.get(i, j));
+					System.out.print(" ");
+				}
+				System.out.print("\n");
+			}
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					System.out.print(P_bad.get(i, j));
+					System.out.print(" ");
+				}
+				System.out.print("\n");
+			}
+			
 			set_good(prism, mf_good, 0.01);
-
+			System.out.println("hehe good");
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					System.out.print(policy.get(i, j));
+					System.out.print(" ");
+				}
+				System.out.print("\n");
+			}
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					System.out.print(P_good.get(i, j));
+					System.out.print(" ");
+				}
+				System.out.print("\n");
+			}
+			System.exit(1);
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: " + e.getMessage());
 			System.exit(1);

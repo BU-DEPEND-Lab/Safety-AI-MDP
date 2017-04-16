@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/lpsolve55j.jar"/>
 	<classpathentry kind="lib" path="lib/jas.jar"/>
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
+	<classpathentry kind="lib" path="lib/Jama-1.0.3.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
