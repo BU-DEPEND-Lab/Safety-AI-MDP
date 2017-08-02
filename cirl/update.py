@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 
 def real_optimal(grids, agent, starts, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	expert=[]
-	if theta == None:
+	if theta is None:
 		theta = np.array([1./3., 1./3., -3./3., 0.0])
 	theta = theta/np.linalg.norm(theta, ord=2)
 	grids.w_features(theta)
@@ -42,7 +42,7 @@ def real_optimal(grids, agent, starts, steps, theta = None, gamma=0.5, epsilon =
 def demo(grids, agent, start, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	expert={}
 	agent.state=np.array(grids.states[start[0], start[1]])
-	if theta == None:
+	if theta is  None:
 		theta=np.array([1./3., 1./3., -3./3., 0.0])
 	trajectory=[{"state":agent.state, "feature": grids.features[agent.state[0]][agent.state[1]]}]
 	grids.w_features(theta)
@@ -74,6 +74,13 @@ def demo(grids, agent, start, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 
 	for i in range(len(trajectory)):
 		mu = mu + (gamma**i) * trajectory[i]["feature"]
+	diff = float("inf")
+	while diff > epsilon:
+		i = i + 1
+		diff =  (gamma**i) * trajectory[-1]["feature"]
+		mu = mu + diff
+		diff = np.linalg.norm(diff, ord = 2)
+		
 	expert["mu"]=mu
 	expert["trajectory"]=trajectory
  	playagain=raw_input("Want to play again? [y/n]?")
@@ -92,13 +99,13 @@ def calc_u(grids, agent, policy, steps, gamma=0.5):
 	return mu, trajectory
 
 def exp_u(grids, agent, policy, start, start_action=None, steps=None, epoch=1000, gamma=0.5):
-	if steps == None:
+	if steps is None:
 		steps = epoch
 	mu=np.zeros([3])
 	agent.state=np.array([start[0], start[1]])
 	trajectory_i_j={}
 	for i in range(epoch):
-		if start_action != None:
+		if start_action is not None:
 			org_action=policy[agent.state[0], agent.state[1]]
 			policy[agent.state[0], agent.state[1]]=start_action
 			mu_i_j_1, _= calc_u(grids, agent, policy , steps=1)
@@ -301,7 +308,7 @@ def update_policy(grids, values, epsilon= 1e-5, gamma=0.5):
 
 
 def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = None):
-	if start_theta == None:
+	if start_theta is None:
 		start_theta=np.random.randint(-100, 100, 4)
 	new_theta=start_theta/np.linalg.norm(start_theta, ord=2)
 	grids.w_features(new_theta)
@@ -325,7 +332,7 @@ def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=10
 	index = 0
 	
 	for i in range(iteration):
-		new_theta, w_delta_mu = expert_update_theta(grids, expert, agent, steps, policies, mus, gamma, epsilon)
+		new_index, new_theta, w_delta_mu = expert_update_theta(grids, expert, agent, steps, policies, mus, gamma, epsilon)
 		new_theta = new_theta/np.linalg.norm(new_theta, ord=2)	
 		print i, " iteration", "policy ", new_index, " weighted delta mu: ", w_delta_mu, "new theta: ", new_theta 
 	
@@ -360,6 +367,7 @@ def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=10
 				
 		if abs(w_delta_mu) < epsilon:
 			print "|expert_w_mu - w_mu| = ", abs(w_delta_mu), " < ", epsilon
+			#index = new_index
 			break	
 
 	
@@ -407,7 +415,7 @@ def expert_update_theta(grids, expert, agent, steps, policies, mus, gamma=0.5, e
 		sol = solvers.conelp(c, G, h, dims)
 		sol['status']
 		solution = np.array(sol['x'])
-		if solution != None:
+		if solution is not None:
 			solution=solution.reshape(4)
 			w_delta_mu=np.dot(solution, exp_mu - mus[i])
 			w_delta_mus.append(w_delta_mu)
@@ -418,7 +426,7 @@ def expert_update_theta(grids, expert, agent, steps, policies, mus, gamma=0.5, e
 	
 	#solution = delta_mus[index]/np.linalg.norm(delta_mus[index], ord =2)
 	#delta_mu = np.linalg.norm(delta_mus[index], ord =2)  
-	return solutions[index], w_delta_mus[index]
+	return index, solutions[index], w_delta_mus[index]
 
 	
 def expert_update_theta_1(grids, expert, agent, steps, policies, gamma=0.5, epsilon = 1e-5):
@@ -547,12 +555,37 @@ class train:
 
 
 	def learn_from_policy(self, starts = None, expert_policy = None):
-		self.expert_policy = expert_policy
+		if starts is None:
+			starts = np.array(self.starts)
+		if expert_policy is not None:
+			self.expert_policy = expert_policy
+		else:
+			i = 0
+                        j = 0
+                        file = open('demo_policy', 'r')
+                        for line in file:
+                                for j in range(len(line.split(":"))-1):
+                                       	self.expert_policy[i, j] = float(line.split(":")[j])
+                                i = i + 1
+                        file.close()
 		
+		print self.expert_policy	
+		file=open('log', 'a')
+		file.write("learn from human policy\n")
 		
+		file.write(str(self.grids.loc_max_0))
+                file.write(str(self.grids.loc_max_1))
+                file.write(str(self.grids.loc_min_0))
+                file.write(str(self.grids.loc_min_1)+'\n')
+
+		for i in range(len(self.expert_policy)):
+			for j in range(len(self.expert_policy[i])):
+				file.write(str(self.expert_policy[i, j]) + ":")
+			file.write("\n")
+		file.close()	
+	
 		exp_mu = optimal_feature(self.grids, starts, self.steps, self.expert_policy, epsilon = self.epsilon, gamma=self.gamma)
 		_, theta, policy, _= expert_train(self.grids, exp_mu, self.agent, starts = starts, steps= self.steps, epsilon= self.epsilon, iteration=self.iteration, gamma=self.gamma, start_theta= None, MC = False, safety = None)
-		
 		for i in range(len(policy)):
 			for j in range(len(policy[i])):
 				if policy[i, j] != self.expert_policy[i, j]:
@@ -561,12 +594,8 @@ class train:
 					exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
 					p_B_sum = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
 					print "feature matched policy unsafe rate ", p_B_sum						   '''
-					file = open('different_policy', 'a')
-					file.write("learn from modifield policy\n")
-					for i in self.expert_policy:
-						for j in i:
-							file.write(str(j)+":")
-						file.write("\n")
+					file = open('log', 'a')
+					file.write("learnt policy is different\n")
 					#file.write(str(p_B_expert)+'\n')	
 					file.write(str(theta)+'\n')
 					for i in policy:
@@ -578,11 +607,14 @@ class train:
 					file.close()
 					return policy
 		print "precisely learnt"
+		file = open('log', 'a')
+		file.write("precisely learnt\n")
+		file.close()
 		return policy
 
 		
 
-	def real_expert_train(self, starts = None, expert_theta = None, epsilon= None, distribution= None):
+	def real_expert_train(self, starts = None, expert_theta = None, epsilon= None, distribution= None, safety = False):
 		if distribution is None:
 			distribution = [1.0]
 
@@ -604,7 +636,7 @@ class train:
 		print "expert expected feature counts:"
 		print exp_mu
 
-		file = open('different_policy', 'a')
+		file = open('log', 'a')
 		file.write(str(self.grids.loc_max_0))
 		file.write(str(self.grids.loc_max_1))
 		file.write(str(self.grids.loc_min_0))
@@ -626,7 +658,15 @@ class train:
 							self.demo_policy[i, j]=actions[0]
 					else:
 						self.demo_policy = self.expert_policy
-			file = open('different_policy', 'a')
+
+			if safety is True:                                                            
+                                exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, self.demo_policy, epochs= 10000, epsilon = self.epsilon, gamma=self.gamma)                                                                                 
+                                p_B_expert = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
+                                file = open('log', 'a')
+                                file.write("policy future reach unsafe state rate "+ str(p_B_expert) + "\n") 
+                                file.close()      
+
+			file = open('log', 'a')
 			file.write(str(prob) + " optimal expert is teaching\n")
 			for i in self.demo_policy:
 				for j in i:
@@ -634,6 +674,13 @@ class train:
 				file.write("\n")
 			file.close()
 			
+			file = open('optimal_policy', 'w')
+			for i in self.demo_policy:
+				for j in i:
+					file.write(str(j)+":")
+				file.write("\n")
+			file.close()
+
 			demo_mu = optimal_feature(self.grids, starts, self.steps, self.demo_policy, epsilon = self.epsilon, gamma=self.gamma)
 			_, theta, policy, _= expert_train(self.grids, demo_mu, self.agent, starts = starts, steps= self.steps, epsilon= epsilon, iteration=self.iteration, gamma=self.gamma, start_theta= -1.0* expert_theta, MC = False, safety= None)
 
@@ -642,7 +689,7 @@ class train:
 				for j in range(len(policy[i])):
 					if policy[i, j] != self.demo_policy[i, j]:
 						print "feature matched policy is different with ", prob, " expert"
-						file = open('different_policy', 'a')
+						file = open('log', 'a')
 
 	  			  	        file.write("feature matched policy is different with " + str(prob) +" expert\n")
 						file.write(str(theta)+'\n')
@@ -658,16 +705,13 @@ class train:
 				
 			if unmatch is False:
 				print "precisely learnt"
-				file = open('different_policy', 'a')
-				file.write("precisely learnt\n")
+				file = open('log', 'a')
+				file.write("learnt parameter " + str(theta)+'\n')
+				file.write("policy precisely learnt\n")
 				file.close()
 
 			
-		return self.expert_policy
-					
 		'''
-		exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, self.expert_policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
-		p_B_expert = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
 		if safety is not None:
 			safety = p_B_expert
 		print "original expert policy's unsafe rate ", p_B_expert
@@ -700,6 +744,9 @@ class train:
 		pylab.ion()
 		pylab.title('Rewards from expert train, close to continue')
 		'''
+		return self.expert_policy
+
+
 		_, theta, policy, _= expert_train(self.grids, exp_mu, self.agent, starts = starts, steps= self.steps, epsilon= epsilon, iteration=self.iteration, gamma=self.gamma, start_theta= -1.0* expert_theta, MC = False, safety= None)
 		for i in range(len(policy)):
 			for j in range(len(policy[i])):
@@ -709,26 +756,6 @@ class train:
 					exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
 					p_B_sum = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
 					print "feature matched policy unsafe rate ", p_B_sum						   '''
-					#pylab.ioff()
-					file = open('different_policy', 'a')
-					file.write(str(self.grids.loc_max_0))
-					file.write(str(self.grids.loc_max_1))
-					file.write(str(self.grids.loc_min_0)+'\n')
-					file.write(str(expert_theta) + '\n')
-					for i in self.expert_policy:
-						for j in i:
-							file.write(str(j)+":")
-						file.write("\n")
-					#file.write(str(p_B_expert)+'\n')
-					file.write(str(theta)+'\n')
-					for i in policy:
-						for j in i:
-							file.write(str(j)+":")
-						file.write("\n")
-					#file.write(str(p_B_sum)+'\n')
-					file.close()
-					return policy
-		print "precisely learnt"
 		return policy
 	
 	
@@ -740,11 +767,11 @@ class train:
 		if epsilon is None:
 			epsilon = self.epsilon
 		
-		file = open('demo_policy', 'w')
-		for i in starts:
-			file.write(str(i[0])+","+str(i[1])+":")	
-		file.write("\n")				 
-		file.close()
+		#file = open('demo_policy', 'w')
+		#for i in starts:
+		#	file.write(str(i[0])+","+str(i[1])+":")	
+		#file.write("\n")				 
+		#file.close()
 
 		again = 'y'
 		while(again != 'n' and again!= 'N'):
@@ -765,9 +792,16 @@ class train:
 		demo_mu = demo_mu/len(self.expert)	
 		print "expected demo mu is ", demo_mu
 
-		_, _, self.demo_policy,_ = expert_train(self.grids, demo_mu, self.agent, epsilon = epsilon, starts = starts, steps= self.steps, iteration = self.iteration, gamma=self.gamma, start_theta = None, MC = False)
+		_, theta, self.demo_policy,_ = expert_train(self.grids, demo_mu, self.agent, epsilon = epsilon, starts = starts, steps= self.steps, iteration = self.iteration, gamma=self.gamma, start_theta = None, MC = False)
 		draw_grids(self.grids.rewards, None)
-		file = open('demo_policy', 'w')
+		file = open('log', 'a')	
+		file.write("leanrt from human demo\n")
+		file.write(str(self.grids.loc_max_0))
+                file.write(str(self.grids.loc_max_1))
+                file.write(str(self.grids.loc_min_0))
+                file.write(str(self.grids.loc_min_1)+'\n')
+
+		file.write("parameter "+ str(theta) + "\n")
 		for i in self.demo_policy:
 			for j in i:
 				file.write(str(j)+":")
@@ -779,7 +813,7 @@ class train:
 			if real == 'Y' or real == 'y':
 				i = -2
 				j = 0
-				file = open('different_policy', 'r')
+				file = open('demo_policy', 'r')
 				for line in file:
 					if i == 0: 
 						for j in range(len(line.split(":"))-1):

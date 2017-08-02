@@ -26,6 +26,8 @@ class grid():
 			self.loc_max_1 = np.random.randint(y_max, size=2)
 			self.loc_max_0 = np.random.randint(y_max, size=2)
 			self.loc_min_1 = np.random.randint(y_max, size=2)
+
+
 	
 ##################
 		self.features=np.zeros([self.y_max, self.x_max, 4]).astype(float)
