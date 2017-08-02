@@ -75,7 +75,8 @@ public class grid_world {
 	public static double p = 0.0;
 	public static Matrix P_bad;
 	public static Matrix P_good;
-	public static Matrix P_exp;
+	public static Matrix P_OPT;
+	public static Matrix P_DEMO;
 	public static Matrix policy;
 
 	public static void main(String[] args) throws IOException, InterruptedException, PrismLangException {
@@ -150,9 +151,9 @@ public class grid_world {
 
 	}
 
-	static final public void Prop_PropertyDef(PropertiesFile pf_expert) {
+	static final public void Prop_PropertyDef(PropertiesFile pf_opt) {
 		String property1 = "Pmin=?[F (x=x_end & y=y_end)]";
-		pf_expert.addProperty(new Property(new ExpressionLiteral(TypeDouble.getInstance(), property1)));
+		pf_opt.addProperty(new Property(new ExpressionLiteral(TypeDouble.getInstance(), property1)));
 	}
 
 	static final public void ParsePolicy(ArrayList<String> lines) {
@@ -325,12 +326,12 @@ public class grid_world {
 					mf_good.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
 					mf_good.tidyUp();
 					PrintStream ps_console = System.out;
-					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm")));
+					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm")));
 					System.setOut(ps_file);
 					System.out.println(mf_good);
 					System.setOut(ps_console);
 					//System.out.println(mf_good);
-					ModulesFile mf = prism.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm"));
+					ModulesFile mf = prism.parseModelFile(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_good.pm"));
 					prism.loadPRISMModel(mf);
 					PropertiesFile propertiesFile = prism.parsePropertiesString(mf, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
 					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
@@ -398,11 +399,11 @@ public class grid_world {
 							"y = " + Integer.toString(i) + "& x = " + Integer.toString(j)));
 					mf_bad.tidyUp();
 					PrintStream ps_console = System.out;
-					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm")));
+					PrintStream ps_file = new PrintStream(new FileOutputStream(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm")));
 					System.setOut(ps_file);
 					System.out.println(mf_bad);
 					System.setOut(ps_console);
-					ModulesFile mf = prism.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm"));
+					ModulesFile mf = prism.parseModelFile(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_bad.pm"));
 					prism.loadPRISMModel(mf);
 					
 					PropertiesFile propertiesFile = prism.parsePropertiesString(mf, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
@@ -453,22 +454,22 @@ public class grid_world {
 			Prism prism = new Prism(mainLog);
 			prism.initialise();
 
-			ModulesFile mf_expert = new ModulesFile();
+			ModulesFile mf_opt = new ModulesFile();
 			ModulesFile mf_demo = new ModulesFile();
 			ModulesFile mf_good = new ModulesFile();
 			ModulesFile mf_bad = new ModulesFile();
 
-			mf_expert.setModelType(ModelType.DTMC);
-			mf_demo.setModelType(mf_expert.getModelType());
-			mf_good.setModelType(mf_expert.getModelType());
-			mf_bad.setModelType(mf_expert.getModelType());
+			mf_opt.setModelType(ModelType.DTMC);
+			mf_demo.setModelType(mf_opt.getModelType());
+			mf_good.setModelType(mf_opt.getModelType());
+			mf_bad.setModelType(mf_opt.getModelType());
 
 			ArrayList<String> files = new ArrayList<String>();
-			String STATE_SPACE = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/state_space";
-			String EXPERT_POLICY = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/expert_policy";
-			String DEMO_POLICY = "/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/demo_policy";
+			String STATE_SPACE = "//home/zekunzhou/Safety-AI-MDP/cirl/state_space";
+			String OPT_POLICY = "//home/zekunzhou/Safety-AI-MDP/cirl/optimal_policy";
+			String DEMO_POLICY = "//home/zekunzhou/Safety-AI-MDP/cirl/demo_policy";
 			files.add(STATE_SPACE);
-			files.add(EXPERT_POLICY);
+			files.add(OPT_POLICY);
 			files.add(DEMO_POLICY);
 			ArrayList<String> lines = new ArrayList<String>();
 			for (String file : files) {
@@ -483,15 +484,15 @@ public class grid_world {
 						lines.add(line);
 					}
 					if (file.equals(STATE_SPACE)) {
-						ConstantDef(mf_expert.getConstantList(), lines);
-						mf_demo.setConstantList(mf_expert.getConstantList());
-						mf_good.setConstantList(mf_expert.getConstantList());
-						mf_bad.setConstantList(mf_expert.getConstantList());
+						ConstantDef(mf_opt.getConstantList(), lines);
+						mf_demo.setConstantList(mf_opt.getConstantList());
+						mf_good.setConstantList(mf_opt.getConstantList());
+						mf_bad.setConstantList(mf_opt.getConstantList());
 						lines.clear();
 					}
-					if (file.equals(EXPERT_POLICY)) {
+					if (file.equals(OPT_POLICY)) {
 						ParsePolicy(lines);
-						FormulaDef(mf_expert.getFormulaList(), policy);
+						FormulaDef(mf_opt.getFormulaList(), policy);
 						lines.clear();
 					}
 					if (file.equals(DEMO_POLICY)) {
@@ -504,14 +505,14 @@ public class grid_world {
 				}
 			}
 
-			Module m_expert = Module("grid_world", mf_expert.getConstantList(), mf_expert.getFormulaList());
-			mf_expert.addModule(m_expert);
-			mf_expert.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x = 3 & y = 0"));
+			Module m_opt = Module("grid_world", mf_opt.getConstantList(), mf_opt.getFormulaList());
+			mf_opt.addModule(m_opt);
+			mf_opt.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x = 0 & y = 0"));
 
-			mf_expert.tidyUp();
-			Module m_demo = Module("grid_demo", mf_demo.getConstantList(), mf_expert.getFormulaList());
+			mf_opt.tidyUp();
+			Module m_demo = Module("grid_demo", mf_demo.getConstantList(), mf_opt.getFormulaList());
 			mf_demo.addModule(m_demo);
-			mf_demo.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x =5 & y = 4"));
+			mf_demo.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x =0 & y = 0"));
 			mf_demo.tidyUp();
 
 			// RewardStruct rs = RewardStruct();
@@ -521,52 +522,100 @@ public class grid_world {
 			// mf.setInitialStates(init); initCount++; if (initCount == 2)
 			// initDupe = init;
 
-			prism.loadPRISMModel(mf_expert);
+			prism.loadPRISMModel(mf_opt);
 
 			PrintStream ps_console = System.out;
 			PrintStream ps_file = new PrintStream(new FileOutputStream(
-					new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+					new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
 			System.setOut(ps_file);
-			System.out.println(mf_expert);
+			System.out.println(mf_opt);
 
 			System.setOut(ps_console);
-			System.out.println(mf_expert);
+			System.out.println(mf_opt);
 
 			ModulesFile modulesFile = prism
-					.parseModelFile(new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+					.parseModelFile(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
 			prism.loadPRISMModel(modulesFile);
 			// Parse and load a properties model for the model
 			PropertiesFile propertiesFile = prism.parsePropertiesFile(modulesFile,
-					new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
+					new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
 			Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 			System.out.println(result.getResult());
 			System.out.println(prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(1)).getResult());
 			// System.out.println(mf_demo);
-			// PropertiesFile pf_expert = new PropertiesFile(mf_expert);
+			// PropertiesFile pf_opt = new PropertiesFile(mf_opt);
 			// Prop_ConstantDef(propertiesFile.getConstantList(), 0, 0, 1, 1);
-			// System.out.println(pf_expert.getConstantList());
+			// System.out.println(pf_opt.getConstantList());
 
-			P_exp = new Matrix(new double[y_max + 1][x_max + 1]);
+			P_OPT = new Matrix(new double[y_max + 1][x_max + 1]);
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
-					mf_expert.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
+					mf_opt.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
 							"x = " + Integer.toString(j) + " & y = " + Integer.toString(i)));
 
 					ps_console = System.out;
 					ps_file = new PrintStream(new FileOutputStream(
-							new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+							new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
 					System.setOut(ps_file);
-					System.out.println(mf_expert);
+					System.out.println(mf_opt);
 					System.setOut(ps_console);
 					modulesFile = prism.parseModelFile(
-							new File("/home/zwc662/Documents/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+							new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
 					prism.loadPRISMModel(modulesFile);
-					propertiesFile = prism.parsePropertiesString(mf_expert, "P=? [F x = 4 & y = 5 ]");
+					propertiesFile = prism.parsePropertiesString(mf_opt, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
 					result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
 					// System.out.println(result.getResult());
-					P_exp.set(i, j, (double) result.getResult());
-					System.out.println(P_exp.get(i, j));
+					P_OPT.set(i, j, (double) result.getResult());
+					System.out.print(P_OPT.get(i, j));
+					System.out.print(":");
 				}
+				System.out.print("\n");
+			}
+			
+			
+			prism.loadPRISMModel(mf_demo);
+
+			ps_console = System.out;
+			ps_file = new PrintStream(new FileOutputStream(
+					new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+			System.setOut(ps_file);
+			System.out.println(mf_demo);
+
+			System.setOut(ps_console);
+			System.out.println(mf_demo);
+
+			modulesFile = prism
+					.parseModelFile(new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+			prism.loadPRISMModel(modulesFile);
+			// Parse and load a properties model for the model
+			propertiesFile = prism.parsePropertiesFile(modulesFile,
+					new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pctl"));
+			result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
+			System.out.println(result.getResult());
+			System.out.println(prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(1)).getResult());
+			P_DEMO = new Matrix(new double[y_max + 1][x_max + 1]);
+			for (int i = 0; i <= y_max; i++) {
+				for (int j = 0; j <= x_max; j++) {
+					mf_opt.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(),
+							"x = " + Integer.toString(j) + " & y = " + Integer.toString(i)));
+
+					ps_console = System.out;
+					ps_file = new PrintStream(new FileOutputStream(
+							new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm")));
+					System.setOut(ps_file);
+					System.out.println(mf_demo);
+					System.setOut(ps_console);
+					modulesFile = prism.parseModelFile(
+							new File("//home/zekunzhou/Safety-AI-MDP/prism-4.3.1-src/src/demos/grid_world.pm"));
+					prism.loadPRISMModel(modulesFile);
+					propertiesFile = prism.parsePropertiesString(mf_demo, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
+					result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
+					// System.out.println(result.getResult());
+					P_DEMO.set(i, j, (double) result.getResult());
+					System.out.print(P_DEMO.get(i, j));
+					System.out.print(":");
+				}
+				System.out.print("\n");
 			}
 
 			set_bad(prism, mf_bad, 0.01);
