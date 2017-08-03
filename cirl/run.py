@@ -11,7 +11,7 @@ from update import train
 
 
 if __name__ == "__main__":
-	grids= grid(8, 8, False, [[3, 7],[7, 3],[5, 5],[7, 7]], 0.7, sink = False)
+	grids= grid(8, 8, False, [[3, 7],[1, 6],[1, 3],[6, 5]], 0.7, sink = False)
 	trains= train(grids= grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [1.0, 1.0, -10.0, 0.0])
 	real=raw_input("Try synthesizing? [Y/N]")
 	if real == 'Y' or real == 'y':
