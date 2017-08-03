@@ -305,14 +305,15 @@ public class grid_world {
 		P_good = new Matrix(new double[y_max + 1][x_max + 1]);
 		
 		//policy = new Matrix(new double[y_max + 1][x_max + 1]);
-		for (int i = 0; i <= x_max; i++) {
+		/*for (int i = 0; i <= x_max; i++) {
 			for (int j = 0; j <= y_max; j++) {
 				//policy.set(i, j, 1.0);
 				System.out.print(policy.get(i,  j));
 				System.out.print(":");
 			}
 			System.out.print("\n");
-		}
+		}*/
+		
 		
 		//policy.set(y_l_0, x_l_0, 0.0);
 		policy.set(y_h_0, x_h_0, 0.0);
@@ -323,7 +324,7 @@ public class grid_world {
 		mf_good.addModule(m_good);
 
 		Double diff = Double.MAX_VALUE;
-		while (diff > epsilon) {
+		while (diff >= epsilon) {
 			diff = 0.0;
 			
 			for (int i = 0; i <= y_max; i++) {
@@ -340,14 +341,41 @@ public class grid_world {
 					prism.loadPRISMModel(mf);
 					PropertiesFile propertiesFile = prism.parsePropertiesString(mf, "P=? [F x = " + Integer.toString(x_l_0) + " & y = " + Integer.toString(y_l_0) + "]");
 					Result result = prism.modelCheck(propertiesFile, propertiesFile.getPropertyObject(0));
-					if (Math.abs(P_good.get(i, j) - (double) result.getResult()) > diff)
+					if (P_good.get(i, j) - (double) result.getResult() > diff)
 						diff = Math.abs(P_good.get(i, j) - (double) result.getResult());
+					if(P_good.get(i, j) - (double) result.getResult() <= 0)
+						diff = epsilon;
+						
 					P_good.set(i, j, (double) result.getResult());
 				}
 			}
 			
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
+					double good = 0.0;
+					if(policy.get(i, j)==1.0){
+						good = P_good.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if(policy.get(i,  j)==2.0){
+						good = P_good.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if(policy.get(i,  j)==3.0){
+						good =P_good.get(Math.abs(i - 1), j) ;
+					} else if(policy.get(i,  j)==4.0){
+						good = P_good.get(i, Math.abs(j - 1));
+					}
+					if (P_good.get(i, x_max - Math.abs(x_max - j - 1)) < good) {
+						policy.set(i, j, 1);
+						good = P_good.get(i, x_max - Math.abs(x_max - j - 1));
+					} else if (P_good.get(y_max - Math.abs(y_max - i - 1), j) < good) {
+						policy.set(i, j, 2);
+						good = P_good.get(y_max - Math.abs(y_max - i - 1), j);
+					} else if (P_good.get(i, Math.abs(j - 1)) < good) {
+						policy.set(i, j, 3);
+						good = P_good.get(i, Math.abs(j - 1));
+					} else if (P_good.get(Math.abs(i - 1), j) < good) {
+						policy.set(i, j, 4);
+						good = P_good.get(Math.abs(i - 1), j);
+					} 
+					/**
 					double good = P_good.get(i, j);
 					double chaos = (1-p) * 0.25 * (P_good.get(i, x_max - Math.abs(x_max - j - 1)) + P_good.get(y_max - Math.abs(y_max - i - 1), j) + P_good.get(i, Math.abs(j - 1)) + P_good.get(Math.abs(i - 1), j));
 					if (chaos + p * P_good.get(i, x_max - Math.abs(x_max - j - 1)) < good) {
@@ -363,16 +391,29 @@ public class grid_world {
 						policy.set(i, j, 4);
 						good = chaos + p * P_good.get(Math.abs(i - 1), j);
 					} 
-					//policy.set(y_l_0, x_l_0, 0.0);
-					
-					
-					
-					
+					**/
 				}
 			}
 			policy.set(y_h_1, x_h_1, 0.0);
 			policy.set(y_h_0, x_h_0, 0.0);
 			
+			//policy.set(y_l_0, x_l_0, 0.0);
+			for (int i = 0; i <= x_max; i++) {
+				for (int j = 0; j <= y_max; j++) {
+					System.out.print(P_good.get(i,  j));
+					System.out.print(":");
+				}
+				System.out.print("\n");
+			}
+			System.out.print("\n");
+			for (int i = 0; i <= x_max; i++) {
+				for (int j = 0; j <= y_max; j++) {
+					System.out.print(policy.get(i,  j));
+					System.out.print(":");
+				}
+				System.out.print("\n");
+			}
+			System.out.print("\n");
 			FormulaDef(mf_good.getFormulaList(), policy);
 			
 		}
@@ -583,9 +624,10 @@ public class grid_world {
 			// initDupe = init;
 
 			check(prism, mf_opt, P_OPT);
+			System.out.print("\n");
 			check(prism, mf_demo, P_DEMO);
-			
-			set_good(prism, mf_good, 0.01);
+			System.out.print("\n");
+			set_good(prism, mf_good, 0.0001);
 			System.out.println("hehe good");
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
@@ -605,7 +647,7 @@ public class grid_world {
 			System.out.print("\n");
 			
 			
-			set_bad(prism, mf_bad, 0.01);
+			set_bad(prism, mf_bad, 0.0001);
 			System.out.println("hehe bad");
 			for (int i = 0; i <= y_max; i++) {
 				for (int j = 0; j <= x_max; j++) {
