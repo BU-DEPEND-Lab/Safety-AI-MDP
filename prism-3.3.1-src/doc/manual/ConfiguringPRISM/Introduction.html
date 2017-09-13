@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+
+<title>
+PRISM Manual | ConfiguringPRISM / Introduction 
+</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="prism, probabilistic, symbolic, model, checker, verification, birmingham, oxford, parker, norman, kwiatkowska">
+
+<link rel="icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+
+<!--HTMLHeader--><style type='text/css'><!--
+  ul, ol, pre, dl, p { margin-top:0px; margin-bottom:0px; }
+  code.escaped { white-space: nowrap; }
+  .vspace { margin-top:1.33em; }
+  .indent { margin-left:40px; }
+  .outdent { margin-left:40px; text-indent:-40px; }
+  a.createlinktext { text-decoration:none; border-bottom:1px dotted gray; }
+  a.createlink { text-decoration:none; position:relative; top:-0.5em;
+    font-weight:bold; font-size:smaller; border-bottom:none; }
+  img { border:0px; }
+  
+.sourceblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.sourceblocktext {
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.sourceblocktext div {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+  height: 1%;
+}
+.sourceblocktext div.head,
+.sourceblocktext div.foot {
+  font: italic medium serif;
+  padding: 0.5em;
+}
+.codeblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.codeblocktext {
+  text-align: left;
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.codeblocktext pre {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+}.editconflict { color:green; 
+  font-style:italic; margin-top:1.33em; margin-bottom:1.33em; }
+
+  table.markup { border:2px dotted #ccf; width:90%; }
+  td.markup1, td.markup2 { padding-left:10px; padding-right:10px; }
+  table.vert td.markup1 { border-bottom:1px solid #ccf; }
+  table.horiz td.markup1 { width:23em; border-right:1px solid #ccf; }
+  table.markup caption { text-align:left; }
+  div.faq p, div.faq pre { margin-left:2em; }
+  div.faq p.question { margin:1em 0 0.75em 0; font-weight:bold; }
+   
+    .frame 
+      { border:1px solid #cccccc; padding:4px; background-color:#f9f9f9; }
+    .lfloat { float:left; margin-right:0.5em; }
+    .rfloat { float:right; margin-left:0.5em; }
+a.varlink { text-decoration:none; }
+
+--></style>  <meta name='robots' content='index,follow' />
+
+
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/base.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prism.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prismmanual.css">
+
+</head>
+
+<body text="#000000" bgcolor="#ffffff">
+
+<div id="layout-maincontainer">
+<div id="layout-main">
+
+<div id="prism-mainbox">
+
+<!-- ============================================================================= -->
+
+<!--PageHeaderFmt-->
+<!--/PageHeaderFmt-->
+
+<!--PageTitleFmt-->
+  <div id="prism-man-title">
+    <p><a class='wikilink' href='Introduction.html'>Configuring PRISM</a> /
+</p><h1>Introduction</h1>
+
+  </div>
+<!--PageText-->
+<div id='wikitext'>
+<p>The operation of PRISM can be configured in a number of ways. From the GUI, select "Options" from the main menu to bring up the "Options" dialog. The settings are grouped under several tabs. Those which affect the basic model checking functionality of the tool are under the heading "PRISM". Separate settings are available for the simulator and various aspects of the GUI (the model editor, the property editor and the log).
+</p>
+<p class='vspace'>From the command-line version, options are controlled by switches. A full list can be displayed by typing:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-weight:bold;">prism -help</span><br/>
+</div></div>
+</div>
+<p class='vspace'>In the following sections, we give a brief description of the most important configuration options available.
+</p>
+<p class='vspace'>User options and settings are saved locally and reused. They are stored in the file <code>.prism</code>, which can be found in your home directory (<code>~</code>) under Unix, Linux or Mac OS X and in e.g. <code>C:\Documents and Settings\username</code> under Windows. The settings are used by both the command-line and GUI versions of PRISM. Currently the "Options" dialog in the GUI represents the easiest way to modify the settings, but the <code>.prism</code> file is in a simple textual format and can be edited by hand.
+</p>
+<p class='vspace'>To restore the default options for PRISM, click "Load Defaults" and then "Save Options" from the "Options" dialog in the GUI. Alternatively, delete the <code>.prism</code> file and then run PRISM.
+</p>
+</div>
+
+
+<!--PageFooterFmt-->
+  <div id='prism-man-footer'>
+  </div>
+<!--/PageFooterFmt-->
+
+
+<!-- ============================================================================= -->
+
+</div> <!-- id="prism-mainbox" -->
+
+</div> <!-- id="layout-main" -->
+</div> <!-- id="layout-maincontainer" -->
+
+<div id="layout-leftcol">
+<div id="prism-navbar2">
+
+<h3><a class='wikilink' href='../Main/Welcome.html'>PRISM Manual</a></h3>
+<p><strong><a class='wikilink' href='Introduction.html'>Configuring PRISM</a></strong>
+</p><ul><li><a class='selflink' href='Introduction.html'>Introduction</a>
+</li><li><a class='wikilink' href='ComputationEngines.html'>Computation Engines</a>
+</li><li><a class='wikilink' href='IterativeNumericalMethods.html'>Iterative Numerical Methods</a>
+</li><li><a class='wikilink' href='OtherOptions.html'>Other Options</a>
+</li></ul><p>[ <a class='wikilink' href='AllOnOnePage.html'>View all</a> ]
+</p>
+
+
+</div>  <!-- id="prism-navbar2" -->
+</div> <!-- id="layout-leftcol" -->
+
+</body>
+</html>

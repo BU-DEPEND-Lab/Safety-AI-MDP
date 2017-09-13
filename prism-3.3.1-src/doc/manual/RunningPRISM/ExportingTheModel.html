@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+
+<title>
+PRISM Manual | RunningPRISM / ExportingTheModel 
+</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="prism, probabilistic, symbolic, model, checker, verification, birmingham, oxford, parker, norman, kwiatkowska">
+
+<link rel="icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+
+<!--HTMLHeader--><style type='text/css'><!--
+  ul, ol, pre, dl, p { margin-top:0px; margin-bottom:0px; }
+  code.escaped { white-space: nowrap; }
+  .vspace { margin-top:1.33em; }
+  .indent { margin-left:40px; }
+  .outdent { margin-left:40px; text-indent:-40px; }
+  a.createlinktext { text-decoration:none; border-bottom:1px dotted gray; }
+  a.createlink { text-decoration:none; position:relative; top:-0.5em;
+    font-weight:bold; font-size:smaller; border-bottom:none; }
+  img { border:0px; }
+  
+.sourceblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.sourceblocktext {
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.sourceblocktext div {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+  height: 1%;
+}
+.sourceblocktext div.head,
+.sourceblocktext div.foot {
+  font: italic medium serif;
+  padding: 0.5em;
+}
+.codeblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.codeblocktext {
+  text-align: left;
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.codeblocktext pre {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+}.editconflict { color:green; 
+  font-style:italic; margin-top:1.33em; margin-bottom:1.33em; }
+
+  table.markup { border:2px dotted #ccf; width:90%; }
+  td.markup1, td.markup2 { padding-left:10px; padding-right:10px; }
+  table.vert td.markup1 { border-bottom:1px solid #ccf; }
+  table.horiz td.markup1 { width:23em; border-right:1px solid #ccf; }
+  table.markup caption { text-align:left; }
+  div.faq p, div.faq pre { margin-left:2em; }
+  div.faq p.question { margin:1em 0 0.75em 0; font-weight:bold; }
+   
+    .frame 
+      { border:1px solid #cccccc; padding:4px; background-color:#f9f9f9; }
+    .lfloat { float:left; margin-right:0.5em; }
+    .rfloat { float:right; margin-left:0.5em; }
+a.varlink { text-decoration:none; }
+
+--></style>  <meta name='robots' content='index,follow' />
+
+
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/base.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prism.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prismmanual.css">
+
+</head>
+
+<body text="#000000" bgcolor="#ffffff">
+
+<div id="layout-maincontainer">
+<div id="layout-main">
+
+<div id="prism-mainbox">
+
+<!-- ============================================================================= -->
+
+<!--PageHeaderFmt-->
+<!--/PageHeaderFmt-->
+
+<!--PageTitleFmt-->
+  <div id="prism-man-title">
+    <p><a class='wikilink' href='StartingPRISM.html'>Running PRISM</a> /
+</p><h1>Exporting The Model</h1>
+
+  </div>
+<!--PageText-->
+<div id='wikitext'>
+<p>If required, once the model has been constructed it can be exported, either for manual examination or for use in another tool.
+In the GUI, the "Model | Export" menu provides options to export various components of the model:
+the set of reachable states, the transition matrix, the state rewards vector and the transition rewards matrix.
+In all cases, it is possible to export this information either in plain text format or as <a class='urllink' href='http://www.mathworks.com/'>Matlab</a> code.
+Additionally, matrices and vectors can be exported in a format suitable for import into the <a class='urllink' href='http://www.cs.utwente.nl/~zapreevis/mrmc'>MRMC</a> tool
+and the transition matrix of the model can be exported in <a class='urllink' href='http://www.graphviz.org'>Dot</a> format
+which allows easy graphical visualisation of the graph structure of the model.
+The GUI also provides options in the "Model | View" menu,
+which allow exports (in textual format) directly to the log.
+This is convenient for quick examination of small models.
+</p>
+<p class='vspace'>All of this export functionality is available from the command-line version of PRISM, using the following switches:
+</p>
+<div class='vspace'></div><ul><li><code>-exportstates &lt;file&gt;</code>
+</li><li><code>-exporttrans &lt;file&gt;</code>
+</li><li><code>-exportstaterewards &lt;file&gt;</code>
+</li><li><code>-exporttransrewards &lt;file&gt;</code>
+</li><li><code>-exporttransdot &lt;file&gt;</code>
+</li></ul><p class='vspace'>In each case, using <code>stdout</code> instead of a file name causes the information to be displayed directly to the screen.
+To change the export format from the default (plain text) to Matlab or MRMC, use the <code>-exportmatlab</code> and <code>-exportmrmc</code> switches.
+The export command-line switches can be used in combination.  For example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-weight:bold;">prism poll2.sm -exportstates poll2.sta -exporttrans poll2.tra -exportmatlab</span><br/>
+</div></div>
+</div>
+<p class='vspace'>exports both the state space and transition matrix in Matlab format.
+</p>
+<p class='vspace'>Finally, there is some additional export functionality available only from the command-line.
+</p>
+<p class='vspace'>Firstly, in the case where both a model file and properties file have been specified,
+it is possible to export the set of states satisfied by each label in the properties file, including the built-in labels <code>"init"</code> and <code>"deadlock"</code>.
+This is done with the <code>-exportlabels</code> switch and the information
+can be output either in plain text format (default) or for use with Matlab or MRMC (see switches above).
+</p>
+<p class='vspace'>Secondly, when outputting matrices for DTMCs or CTMCs, it is possible to request that PRISM does not sort the rows of the matrix,
+as is normally the case. This is achieved with the <code>-exportunordered</code> switch.
+The reason for this is that in this case PRISM does not need to construct an explicit version of the model in memory
+and the process can thus be performed with reduced memory consumption.
+</p>
+<p class='vspace'>Finally, the <code>-exportrows</code> switch provides an alternative output format for transition matrices where the elements of each row of the matric are grouped on the same line. This can be particularly helpful for viewing the matrix for MDPs. By way of example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-style:italic;">0 0 13 0.5</span><br/>
+<span style="font-style:italic;">0 0 26 0.5</span><br/>
+<span style="font-style:italic;">0 1 1 0.5</span><br/>
+<span style="font-style:italic;">0 1 2 0.5</span><br/>
+<span style="font-style:italic;">1 0 14 0.5</span><br/>
+<span style="font-style:italic;">1 0 27 0.5</span><br/>
+<span style="font-style:italic;">1 1 3 0.5</span><br/>
+<span style="font-style:italic;">1 1 4 0.5</span><br/>
+</div></div>
+</div>
+<p class='vspace'>becomes:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-style:italic;">0 0.5:13 0.5:26</span><br/>
+<span style="font-style:italic;">0 0.5:1 0.5:2</span><br/>
+<span style="font-style:italic;">1 0.5:14 0.5:27</span><br/>
+<span style="font-style:italic;">1 0.5:3 0.5:4</span><br/>
+</div></div>
+</div>
+</div>
+
+
+<!--PageFooterFmt-->
+  <div id='prism-man-footer'>
+  </div>
+<!--/PageFooterFmt-->
+
+
+<!-- ============================================================================= -->
+
+</div> <!-- id="prism-mainbox" -->
+
+</div> <!-- id="layout-main" -->
+</div> <!-- id="layout-maincontainer" -->
+
+<div id="layout-leftcol">
+<div id="prism-navbar2">
+
+<h3><a class='wikilink' href='../Main/Welcome.html'>PRISM Manual</a></h3>
+<p><strong><a class='wikilink' href='StartingPRISM.html'>Running PRISM</a></strong>
+</p><ul><li><a class='wikilink' href='StartingPRISM.html'>Starting PRISM</a>
+</li><li><a class='wikilink' href='LoadingAndBuildingAModel.html'>Loading And Building a Model</a>
+</li><li><a class='wikilink' href='DebuggingModelsWithTheSimulator.html'>Debugging Models With The Simulator</a>
+</li><li><a class='selflink' href='ExportingTheModel.html'>Exporting The Model</a>
+</li><li><a class='wikilink' href='ModelChecking.html'>Model Checking</a>
+</li><li><a class='wikilink' href='ApproximateComputationOfQuantitativeProperties.html'>Approximate Computation Of Quantitative Properties</a>
+</li><li><a class='wikilink' href='ComputingSteady-stateAndTransientProbabilities.html'>Computing Steady-state And Transient Probabilities</a>
+</li><li><a class='wikilink' href='Experiments.html'>Experiments</a>
+</li><li><a class='wikilink' href='SupportForPEPAModels.html'>Support For PEPA Models</a>
+</li><li><a class='wikilink' href='SupportForSBML.html'>Support For SBML</a>
+</li><li><a class='wikilink' href='ExplicitModelImport.html'>Explicit Model Import</a>
+</li></ul><p>[ <a class='wikilink' href='AllOnOnePage.html'>View all</a> ]
+</p>
+
+
+</div>  <!-- id="prism-navbar2" -->
+</div> <!-- id="layout-leftcol" -->
+
+</body>
+</html>

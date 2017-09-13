@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+
+<title>
+PRISM Manual | ConfiguringPRISM / AllOnOnePage 
+</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="prism, probabilistic, symbolic, model, checker, verification, birmingham, oxford, parker, norman, kwiatkowska">
+
+<link rel="icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+
+<!--HTMLHeader--><style type='text/css'><!--
+  ul, ol, pre, dl, p { margin-top:0px; margin-bottom:0px; }
+  code.escaped { white-space: nowrap; }
+  .vspace { margin-top:1.33em; }
+  .indent { margin-left:40px; }
+  .outdent { margin-left:40px; text-indent:-40px; }
+  a.createlinktext { text-decoration:none; border-bottom:1px dotted gray; }
+  a.createlink { text-decoration:none; position:relative; top:-0.5em;
+    font-weight:bold; font-size:smaller; border-bottom:none; }
+  img { border:0px; }
+  
+.sourceblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.sourceblocktext {
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.sourceblocktext div {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+  height: 1%;
+}
+.sourceblocktext div.head,
+.sourceblocktext div.foot {
+  font: italic medium serif;
+  padding: 0.5em;
+}
+.codeblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.codeblocktext {
+  text-align: left;
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.codeblocktext pre {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+}.editconflict { color:green; 
+  font-style:italic; margin-top:1.33em; margin-bottom:1.33em; }
+
+  table.markup { border:2px dotted #ccf; width:90%; }
+  td.markup1, td.markup2 { padding-left:10px; padding-right:10px; }
+  table.vert td.markup1 { border-bottom:1px solid #ccf; }
+  table.horiz td.markup1 { width:23em; border-right:1px solid #ccf; }
+  table.markup caption { text-align:left; }
+  div.faq p, div.faq pre { margin-left:2em; }
+  div.faq p.question { margin:1em 0 0.75em 0; font-weight:bold; }
+   
+    .frame 
+      { border:1px solid #cccccc; padding:4px; background-color:#f9f9f9; }
+    .lfloat { float:left; margin-right:0.5em; }
+    .rfloat { float:right; margin-left:0.5em; }
+a.varlink { text-decoration:none; }
+
+--></style>  <meta name='robots' content='index,follow' />
+
+
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/base.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prism.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prismmanual.css">
+
+</head>
+
+<body text="#000000" bgcolor="#ffffff">
+
+<div id="layout-maincontainer">
+<div id="layout-main">
+
+<div id="prism-mainbox">
+
+<!-- ============================================================================= -->
+
+<!--PageHeaderFmt-->
+<!--/PageHeaderFmt-->
+
+<!--PageTitleFmt--><!--PageText-->
+<div id='wikitext'>
+<div class='vspace'></div><h1><span class='big'>Configuring PRISM</span></h1>
+<hr />
+<h1>Introduction</h1>
+<p>The operation of PRISM can be configured in a number of ways. From the GUI, select "Options" from the main menu to bring up the "Options" dialog. The settings are grouped under several tabs. Those which affect the basic model checking functionality of the tool are under the heading "PRISM". Separate settings are available for the simulator and various aspects of the GUI (the model editor, the property editor and the log).
+</p>
+<p class='vspace'>From the command-line version, options are controlled by switches. A full list can be displayed by typing:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-weight:bold;">prism -help</span><br/>
+</div></div>
+</div>
+<p class='vspace'>In the following sections, we give a brief description of the most important configuration options available.
+</p>
+<p class='vspace'>User options and settings are saved locally and reused. They are stored in the file <code>.prism</code>, which can be found in your home directory (<code>~</code>) under Unix, Linux or Mac OS X and in e.g. <code>C:\Documents and Settings\username</code> under Windows. The settings are used by both the command-line and GUI versions of PRISM. Currently the "Options" dialog in the GUI represents the easiest way to modify the settings, but the <code>.prism</code> file is in a simple textual format and can be edited by hand.
+</p>
+<p class='vspace'>To restore the default options for PRISM, click "Load Defaults" and then "Save Options" from the "Options" dialog in the GUI. Alternatively, delete the <code>.prism</code> file and then run PRISM.
+</p><hr />
+<h1>Computation Engines</h1>
+<h3>Computation engines</h3>
+<p>An important feature of the tool is its <em>engines</em>.
+PRISM is a symbolic model checker: its basic underlying data structures are BDDs and MTBDDs.
+When performing numerical computation, however, the tool can use one of three engines.
+The first is implemented purely in <em>MTBDDs</em> (and BDDs); the second uses <em>sparse matrices</em>;
+and the third is a <em>hybrid</em>, using a combination of the other two.
+</p>
+<p class='vspace'>The choice of engine ("MTBDD", "sparse" or "hybrid") will not affect the results of model checking -
+all engines perform the same calculations
+(although in a few cases, some types of computation can only be performed with certain engines).
+Performance (time and space), however, may vary significantly and if you are using too much time/memory with one engine, it may be worth experimenting. Below, we briefly summarise the key characteristics of each engine.
+</p>
+<div class='vspace'></div><ul><li><strong>The hybrid engine</strong> is enabled by default in PRISM. It uses a combination of <em>symbolic</em> and <em>explicit</em> data structures (as used in the MTBDD and sparse engines, respectively). In general it provides the best compromise between time and memory usage: it (almost) always uses less memory than the sparse engine, but is typically slightly slower. The size of model which can be handled with this engine is quite predictable. The limiting factor in terms of memory usage comes from the storage of 2-4 (depending on the computation being performed) arrays of 8-byte values, one for each state in the model. So, a typical PC can handle models with between 10<sup>7</sup> and 10<sup>8</sup> states (one vector for 10<sup>7</sup> states uses approximately 75 MB).
+<div class='vspace'></div></li><li><strong>The sparse engine</strong> can be a good option for smaller models where model checking takes a long time. For larger models, however, memory usage quickly becomes prohibitive. As a rule of thumb, the upper limit for this engine, in terms of model sizes which can be handled, is about a factor of 10 less than the hybrid engine.
+<div class='vspace'></div></li><li><strong>The MTBDD engine</strong> is much more unpredictable in terms of performance but, when a model exhibits a lot of structure and regularity, can be very effective. This engine has been successfully applied to extremely large structured (but non-trivial) models, in cases where the other two engines cannot be applied. The MTBDD engine often performs poorly when the model (or solutions computed from it) contain lots of distinct probabilities/rates; it performs best when there are few such values. For this reason the engine is often successfully applied to MDP models, but much less frequently to CTMCs. When using the MTBDD engine, the <em>variable ordering</em> of your model is especially important. This topic is covered in the <a class='wikilink' href='../FrequentlyAskedQuestions/PRISMModelling.html#ordering'>FAQ</a> section.
+</li></ul><p class='vspace'>When using the PRISM GUI, the engine to be used for model checking can be selected from the "Engine" option under the "PRISM" tab of the "Options" dialog. From the command-line, engines are activated using the <code>-mtbdd</code>, <code>-sparse</code> and <code>-hybrid</code> (or <code>-m</code>, <code>-s</code> and <code>-h</code>, respectively) switches, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="shell"><span style="font-weight:bold;">prism poll2.sm -tr 1000 -s</span><br/>
+</div></div>
+</div>
+<p class='vspace'>For further information and technical details about PRISM's implementation and engines, see: [<a class='wikilink' href='../Main/References.html#Par02'>Par02</a>],[<a class='wikilink' href='../Main/References.html#KNP04b'>KNP04b</a>].
+</p>
+<p class='vspace'>Note also that precise details regarding the memory usage of the current engine are displayed during model checking (from the GUI, check the "Log" tab). This can provide valuable feedback when experimenting with different engines.
+</p><hr />
+<h1>Iterative Numerical Methods</h1>
+<p>For performing the computation of probabilities and expected costs/rewards during verification, PRISM uses iterative numerical methods. The methods used vary depending on the type of verification being performed. In some cases, PRISM solves systems of linear equation systems (e.g. "until" properties for DTMCs and CTMCs, steady-state properties for CTMCs and "reachability reward" properties for DTMCs). For this, a range of methods are available (see below). For "until" and "reachability reward" properties of MDPs, PRISM uses a method called "value iteration". For computations involving transient probabilities of CTMCs (e.g. "bounded until" and "cumulative reward" properties), it uses a method called "uniformisation".
+</p>
+<div class='vspace'></div><h3>Convergence</h3>
+<p>Common to all of these methods is the way that PRISM checks convergence, i.e. decides when to terminate the iterative methods because the answers have converged sufficiently. This is done by checking when the maximum difference between elements in the solution vectors from successive iterations drops below a given threshold. The default value for this threshold is 10<sup>-6</sup> but it can be altered with the "Termination epsilon" option (switch <code>-epsilon &lt;val&gt;</code>). The way that the maximum difference is computed can also be varied:
+either "relative" or "absolute" (the default is "relative"). This can be changed using the "Termination criteria" option (command-line switches <code>-relative</code> and <code>-absolute</code>, or <code>-rel</code> and <code>-abs</code> for short).
+</p>
+<p class='vspace'>Also, the maximum number of iterations performed is given an upper limit
+in order to trap the cases when computation will not converge.
+The default limit is 10,000 but can be changed with the "Termination max. iterations" option (switch <code>-maxiters &lt;val&gt;</code>). Computations that reach this upper limit will trigger an error during model checking to alert the user to this fact.
+</p>
+<p class='vspace'>For the specific case of "steady-state convergence checking" during uniformisation (which is an optimisation for uniformisation), convergence checking can be disabled with the "Use steady-state detection" option (command-line switch <code>-nossdetect</code>).
+</p>
+<div class='vspace'></div><h3>Linear equation systems</h3>
+<p>For instances where PRISM has to solve a linear equation system (see above), the numerical method used can be selected by the user. Below is a list of the alternatives available and the switches used to select them from the command-line. The corresponding GUI option is "Iterative method".
+</p>
+<div class='vspace'></div><ul><li>Power method: <code>-power</code> (or <code>-pow</code>, <code>-pwr</code>)
+</li><li>Jacobi method: <code>-jacobi</code> (or <code>-jac</code>)
+</li><li>Gauss-Seidel method: <code>-gaussseidel</code> (or <code>-gs</code>)
+</li><li>Backwards Gauss-Seidel method: <code>-bgaussseidel</code> (or <code>-bgs</code>)
+</li><li>JOR method (Jacobi with over-relaxation): <code>-jor</code>
+</li><li>SOR method: <code>-sor</code>
+</li><li>Backwards SOR method: <code>-bsor</code>
+</li></ul><p class='vspace'>When using the MTBDD engine, Gauss-Seidel/SOR based methods are not available. When using the hybrid engine, <em>pseudo</em> variants of Gauss-Seidel/SOR based method can also be used [<a class='wikilink' href='../Main/References.html#Par02'>Par02</a>] (type <code>prism -help</code> at the command-line for details of the corresponding switches). For methods which use over-relaxation (JOR/SOR), the over-relaxation parameter (between 0.0 and 2.0) can also be specified with option "Over-relaxation parameter" (switch <code>-omega &lt;val&gt;</code>).
+</p>
+<div class='vspace'></div><h3>More information</h3>
+<p>For more information about all the issues discussed in this section, see e.g. [<a class='wikilink' href='../Main/References.html#Ste94'>Ste94</a>].
+</p><hr />
+<h1>Other Options</h1>
+<h3>Output options</h3>
+<p>To increase the amount of information displayed by PRISM (in particular, to display lists of states and probability vectors), you can use the "Verbose output" option (activated with comand-line switch <code>-verbose</code> or <code>-v</code>). To display additional statistics about MTBDDs after model construction, use the "Extra MTBDD information" option (switch <code>-extraddinfo</code>) and, to view MTBDD sizes during the process of reachability, use option "Extra reachability information" (switch <code>-extrareachinfo</code>).
+</p>
+<div class='vspace'></div><h3>Fairness</h3>
+<p>Sometimes, model checking of properties for MDPs requires fairness constraints to be taken into account.
+See e.g. [<a class='wikilink' href='../Main/References.html#BK98'>BK98</a>],[<a class='wikilink' href='../Main/References.html#Bai98'>Bai98</a>] for more information.
+To enable the use of fairness constraints (for <code><strong>P</strong></code> operator properties), use the <code>-fair</code> switch.
+</p>
+<div class='vspace'></div><h3>Probability/rate checks</h3>
+<p>By default, when constructing a model, PRISM checks that all probabilities and rates are within acceptable ranges (i.e. are between 0 and 1, or are non-negative, respectively). For DTMCs and MDPs, it also checks that the probabilities sum up to one for each command. These checks are often very useful for highlighting user modelling errors and it is strongly recommended that you keep them enabled, however if you need to disable them you can do so via option "do prob checks?" in the GUI or command-line switch <code>-noprobchecks</code>.
+</p>
+<div class='vspace'></div><h3>CUDD memory</h3>
+<p>CUDD, the underlying BDD and MTBDD library used in PRISM has an upper memory limit.
+By default, this limit is 204800 KB (200 MB).
+If you are working on a machine with significantly more memory this and PRISM runs out of memory when model checking, this may help.
+To set the limit (in KB) from the command-line, use the <code>-cuddmaxmem val</code> switch.
+You can also change this setting in the GUI, but you will need to close and restart the GUI (saving the settings as you do) for this option to take effect.
+</p>
+<div class='vspace'></div><h3>Java memory</h3>
+<p>The Java virtual machine (JVM) used to execute PRISM also has un upper memory limit.
+Sometimes (for example if you are trying to load a model for which the PRISM code is extremely lengthy),
+this limit will be exceeded and you will see an error of the form <code>java.lang.OutOfMemory</code>.
+The current default limit for the Sun JVM is 64MB.
+To resolve this problem, you can increase this memory limit.
+On Unix, Linux or Mac OS X platforms, this is done by setting the environment variable PRISM_JAVAMAXMEM, for example (under a <code>tcsh</code> shell):
+</p>
+<div class='vspace'></div><pre class='escaped'>
+setenv PRISM_JAVAMAXMEM 512m
+prism big_model.pm
+</pre>
+<p class='vspace'>or (under a <code>bash</code> shell):
+</p>
+<div class='vspace'></div><pre class='escaped'>
+PRISM_JAVAMAXMEM=512m
+export PRISM_JAVAMAXMEM
+prism big_model.pm
+</pre>
+<p class='vspace'>The lower case <code>m</code> in <code>512m</code> denotes MB.
+If you are running PRISM on Windows you will have to do this manually by modifying the <code>prism.bat</code> or <code>xprism.bat</code> scripts.
+To set the memory to 512MB for example, replace <code>java</code> at the start of the last line in the appropriate script with <code>java -Xmx512m</code>.
+</p>
+<div class='vspace'></div><h3>Precomputation</h3>
+<p>By default, PRISM's probabilistic model checking algorithms use an initial <em>precomputation</em>
+step which uses graph-based techniques to efficient detect trivial cases where probabilities are 0 or 1.
+Occasionally, you may want to disable this step for efficiency (e.g. if you know that there are no/few such states and the precomputation process is slow). This can be done with the <code>-nopre</code> switch. Please note that it is not always safe to disable precomputation: unless you are checking until properties on MDPs or on DTMCs using the Power method (which is not the default option), then you should only only disable precomputation if you know that it will not identify any states which (non-trivially) have probability 0 or 1.
+</p>
+<div class='vspace'></div>
+</div>
+
+
+<!--PageFooterFmt-->
+  <div id='prism-man-footer'>
+  </div>
+<!--/PageFooterFmt-->
+
+
+<!-- ============================================================================= -->
+
+</div> <!-- id="prism-mainbox" -->
+
+</div> <!-- id="layout-main" -->
+</div> <!-- id="layout-maincontainer" -->
+
+<div id="layout-leftcol">
+<div id="prism-navbar2">
+
+<h3><a class='wikilink' href='../Main/Welcome.html'>PRISM Manual</a></h3>
+<p><strong><a class='wikilink' href='Introduction.html'>Configuring PRISM</a></strong>
+</p><ul><li><a class='wikilink' href='Introduction.html'>Introduction</a>
+</li><li><a class='wikilink' href='ComputationEngines.html'>Computation Engines</a>
+</li><li><a class='wikilink' href='IterativeNumericalMethods.html'>Iterative Numerical Methods</a>
+</li><li><a class='wikilink' href='OtherOptions.html'>Other Options</a>
+</li></ul><p>[ <a class='selflink' href='AllOnOnePage.html'>View all</a> ]
+</p>
+
+
+</div>  <!-- id="prism-navbar2" -->
+</div> <!-- id="layout-leftcol" -->
+
+</body>
+</html>

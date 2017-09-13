@@ -11,22 +11,33 @@ from update import train
 
 
 if __name__ == "__main__":
-	grids= grid(8, 8, False, [[3, 7],[1, 6],[1, 3],[6, 5]], 0.7, sink = False)
-	trains= train(grids= grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [1.0, 1.0, -10.0, 0.0])
+	grids= grid(8, 8, False, [[3, 3], [6, 6], [4, 4], [7, 7]], 0.8, sink = False)
+	trains= train(grids= grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = 64, epsilon = 0.0001, theta = np.array([ 0.0,  0.0, -1.0, -0.0]))
 	real=raw_input("Try synthesizing? [Y/N]")
 	if real == 'Y' or real == 'y':
 		#grids= grid(8, 8, False, [[4, 3], [1, 2], [1, 1], [4, 4]], 0.7, sink = False)
 		#trains = train(grids = grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [ 1.0, 1.0, -1.0, 0.0])
-		#starts = [np.array([0, 0])]
-		trains.synthesize(theta = [1.0, 0.5, -1.0, 0.0], starts = starts)
+		starts = [np.array([0, 0])]
+		trains.synthesize(theta = [1.0, 1.0, -2.0, 0.8], starts = [np.array([0, 0])])
 		#grids = None
 		#trains = None
+		'''
+		for i in range(100):
+			print "experiment ", i
+			grids_1= grid(8, 8, True, 0.7, sink = True)
+			trains_1 = train(grids = grids_1, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [1.0, 0.5, -1.0, 0.0])
+			print "Start real expert training..."
+			starts3 = [np.array([0, 0])]
+			trains_1.synthesize(theta = [1.0, 1.0, -1.0, 0.0], starts = [np.array([0, 0])])
+			grids_1 = None
+			trains_1 = None
+		'''
 	real=raw_input("Learn from optimal policy?[Y/N]")
 	if real == 'Y' or real == 'y':
 		#grids = grid_0
 		#trains = train(grids = grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [1.0, 0.5, -1.0, 0.0])
 		print "Start real optimal policy..."
-		policy = trains.real_expert_train()
+		policy = trains.real_expert_train( safety = True)
 		print policy
 
 	real=raw_input("Learn from human policy?[Y/N]")
@@ -55,7 +66,7 @@ if __name__ == "__main__":
 
 		print "learn form policy"	
 		'''
-		policy=trains.learn_from_policy()
+		policy=trains.learn_from_policy( safety = False)
 		print policy
 		
 		#grids = None
@@ -70,7 +81,8 @@ if __name__ == "__main__":
 			trains_1 = train(grids = grids, gamma = 0.99, iteration = 20, starts = [grids.states[0][0]], steps = None, epsilon = 0.0001, theta = [1.0, 0.5, -1.0, 0.0])
 			print "Start real expert training..."
 			starts3 = [np.array([0, 0])]
-			trains_1.real_expert_train(starts3, distribution=None, safety=True)
+			trains_1.synthesize(theta = [1.0, 1.0, -10.0, 0.0], starts = [np.array([0, 0])])
+			#trains_1.real_expert_train(starts3, distribution=None, safety=True)
 			grids_1 = None
 			trains_1 = None
 		

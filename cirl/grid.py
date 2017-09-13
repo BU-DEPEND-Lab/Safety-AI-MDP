@@ -22,11 +22,10 @@ class grid():
 				self.loc_min_1=np.array(feature_states[3])
 
 		else:
-			self.loc_min_0 = np.random.randint(y_max, size=2)
-			self.loc_max_1 = np.random.randint(y_max, size=2)
-			self.loc_max_0 = np.random.randint(y_max, size=2)
-			self.loc_min_1 = np.random.randint(y_max, size=2)
-
+			self.loc_min_0 = np.random.randint(1, y_max-1, size=2)
+			self.loc_max_1 = np.random.randint(1, y_max-1, size=2)
+			self.loc_max_0 = np.random.randint(1, y_max-1, size=2)
+			self.loc_min_1 = np.random.randint(1, y_max-1, size=2)
 
 	
 ##################
@@ -44,6 +43,7 @@ class grid():
 		self.feature_2=lambda position:  exp(-1.0 * sqrt((position[0]-self.loc_max_1[0])**2+(position[1]-self.loc_max_1[1])**2))
 		self.feature_3=lambda position:  exp(-1.0 * sqrt((position[0]-self.loc_min_0[0])**2+(position[1]-self.loc_min_0[1])**2))
 		self.feature_4=lambda position:  exp(-1.0 * sqrt((position[0]-self.loc_min_1[0])**2+(position[1]-self.loc_min_1[1])**2))
+		#self.feature_4 = lambda position: 0.0
 
 		for i in range(0, self.y_max):
 			for j in range(0, self.x_max):

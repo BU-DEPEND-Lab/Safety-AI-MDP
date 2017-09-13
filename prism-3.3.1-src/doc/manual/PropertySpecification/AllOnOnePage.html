@@ -1,0 +1,783 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+
+<title>
+PRISM Manual | PropertySpecification / AllOnOnePage 
+</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="prism, probabilistic, symbolic, model, checker, verification, birmingham, oxford, parker, norman, kwiatkowska">
+
+<link rel="icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../pub/skins/offline/images/p16.ico" type="image/x-icon">
+
+<!--HTMLHeader--><style type='text/css'><!--
+  ul, ol, pre, dl, p { margin-top:0px; margin-bottom:0px; }
+  code.escaped { white-space: nowrap; }
+  .vspace { margin-top:1.33em; }
+  .indent { margin-left:40px; }
+  .outdent { margin-left:40px; text-indent:-40px; }
+  a.createlinktext { text-decoration:none; border-bottom:1px dotted gray; }
+  a.createlink { text-decoration:none; position:relative; top:-0.5em;
+    font-weight:bold; font-size:smaller; border-bottom:none; }
+  img { border:0px; }
+  
+.sourceblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.sourceblocktext {
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.sourceblocktext div {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+  height: 1%;
+}
+.sourceblocktext div.head,
+.sourceblocktext div.foot {
+  font: italic medium serif;
+  padding: 0.5em;
+}
+.codeblocklink {
+  text-align: right;
+  font-size: smaller;
+}
+.codeblocktext {
+  text-align: left;
+  padding: 0.5em;
+  border: 1px solid #808080;
+  background-color: #F1F0ED;
+}
+.codeblocktext pre {
+  font-family: monospace;
+  font-size: small;
+  line-height: 1.0;
+}.editconflict { color:green; 
+  font-style:italic; margin-top:1.33em; margin-bottom:1.33em; }
+
+  table.markup { border:2px dotted #ccf; width:90%; }
+  td.markup1, td.markup2 { padding-left:10px; padding-right:10px; }
+  table.vert td.markup1 { border-bottom:1px solid #ccf; }
+  table.horiz td.markup1 { width:23em; border-right:1px solid #ccf; }
+  table.markup caption { text-align:left; }
+  div.faq p, div.faq pre { margin-left:2em; }
+  div.faq p.question { margin:1em 0 0.75em 0; font-weight:bold; }
+   
+    .frame 
+      { border:1px solid #cccccc; padding:4px; background-color:#f9f9f9; }
+    .lfloat { float:left; margin-right:0.5em; }
+    .rfloat { float:right; margin-left:0.5em; }
+a.varlink { text-decoration:none; }
+
+--></style>  <meta name='robots' content='index,follow' />
+
+
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/base.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prism.css">
+<link type="text/css" rel="stylesheet" href="../pub/skins/offline/css/prismmanual.css">
+
+</head>
+
+<body text="#000000" bgcolor="#ffffff">
+
+<div id="layout-maincontainer">
+<div id="layout-main">
+
+<div id="prism-mainbox">
+
+<!-- ============================================================================= -->
+
+<!--PageHeaderFmt-->
+<!--/PageHeaderFmt-->
+
+<!--PageTitleFmt--><!--PageText-->
+<div id='wikitext'>
+<div class='vspace'></div><h1><span class='big'>Property Specification</span></h1>
+<hr />
+<h1>Introduction</h1>
+<p>In order to analyse a probabilistic model which has been specified and constructed in PRISM,
+it is necessary to identify one or more <em>properties</em> of the model
+which can be evaluated by the tool.
+PRISM's <em>property specification language</em> subsumes several well-known probabilistic temporal logics, including PCTL, CSL, LTL and PCTL*.
+PCTL is used for specifying properties of DTMCs and MDPs;
+CSL is an extension of PCTL for CTMCs;
+LTL and PCTL* can be used to specify properties of 
+DTMCs and MDPs (or untimed properties of CTMCs).
+</p>
+<p class='vspace'>In fact, PRISM also supports numerous additional customisations and extensions of these two logics.
+Full details of the property specifications permitted in PRISM are provided in the following sections. The presentation given here is relatively informal. For the precise syntax and semantics of the various logics, see [<a class='wikilink' href='../Main/References.html#HJ94'>HJ94</a>],[<a class='wikilink' href='../Main/References.html#BdA95'>BdA95</a>] for PCTL, [<a class='wikilink' href='../Main/References.html#ASSB96'>ASSB96</a>],[<a class='wikilink' href='../Main/References.html#BKH99'>BKH99</a>] for CSL and, for example, [<a class='wikilink' href='../Main/References.html#Bai98'>Bai98</a>] for LTL and PCTL*. You can also find various pointers to useful papers in the <a class='urllink' href='http://www.prismmodelchecker.org/about.php'>About</a> and <a class='urllink' href='http://www.prismmodelchecker.org/doc/'>Documentation</a> sections of the PRISM website.
+</p>
+<p class='vspace'>Before discussing property specifications in more detail,
+it is perhaps instructive to first illustrate some typical examples of properties which PRISM can handle.
+The following are a selection of such properties.
+In each case, we give both the PRISM syntax and a natural language translation:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">1</span> [ <span class="prismkeyword">F</span> "<span class="prismident">terminate</span>" ]<br/>
+</div></div>
+</div>
+<p>"the algorithm eventually terminates successfully with probability 1"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismkeyword">init</span>" =&gt; <span class="prismkeyword">P</span>&lt;<span class="prismnum">0.1</span> [ <span class="prismkeyword">F</span>&lt;=<span class="prismnum">100</span> <span class="prismident">num_errors</span> &gt; <span class="prismnum">5</span> ]<br/>
+</div></div>
+</div>
+<p>"from any initial state, the probability that more than 5 errors occur within the first 100 time units is less than 0.1"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismident">down</span>" =&gt; <span class="prismkeyword">P</span>&gt;<span class="prismnum">0.75</span> [ !"<span class="prismident">fail</span>" <span class="prismkeyword">U</span>[<span class="prismnum">1</span>,<span class="prismnum">2</span>] "<span class="prismident">up</span>" ]<br/>
+</div></div>
+</div>
+<p>"when a shutdown occurs, the probability of system recovery being completed in between 1 and 2 hours without further failures occurring is greater than 0.75"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">S</span>&lt;<span class="prismnum">0.01</span> [ <span class="prismident">num_sensors</span> &lt; <span class="prismident">min_sensors</span> ]<br/>
+</div></div>
+</div>
+<p>"in the long-run, the probability that an inadequate number of sensors are operational is less than 0.01"
+</p>
+<p class='vspace'>Note that the above properties are all assertions,
+i.e. ones to which we would expect a "yes" or "no" answer.
+This is because all references to probabilities are associated with an upper or lower bound
+which can be checked to be either true or false.
+In PRISM, we can also directly specify properties which evaluate to a numerical value, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ !<span class="prismident">proc2_terminate</span> <span class="prismkeyword">U</span> <span class="prismident">proc1_terminate</span> ]<br/>
+</div></div>
+</div>
+<p>"the probability that process 1 terminates before process 2 does"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">Pmax</span>=? [ <span class="prismkeyword">F</span>&lt;=<span class="prismident">T</span> <span class="prismident">messages_lost</span> &gt; <span class="prismnum">10</span> ]<br/>
+</div></div>
+</div>
+<p>"the maximum probability that more than 10 messages have been lost by time <code>T</code>"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">S</span>=? [ <span class="prismident">queue_size</span> / <span class="prismident">max_size</span> &gt; <span class="prismnum">0.75</span> ]<br/>
+</div></div>
+</div>
+<p>"the long-run probability that the queue is more than 75% full"
+</p>
+<p class='vspace'>Furthermore, PRISM makes it easy to combine such properties into more complex expressions,
+compute their values for a range of parameters
+and plot graphs of the results using <a class='wikilink' href='../RunningPRISM/Experiments.html'>experiments</a>.
+This is often a very useful way of identifying interesting
+patterns or trends in the behaviour of a system.
+See the <a class='urllink' href='http://www.prismmodelchecker.org/casestudies/'>Case Studies</a> section of the <a class='urllink' href='http://www.prismmodelchecker.org/'>PRISM website</a> for many examples of this kind of analysis.
+</p><hr />
+<h1>Identifying A Set Of States</h1>
+<p>One of the most fundamental tasks when specifying properties of a model
+is to identify particular sets or classes of states of the model.
+For example, to verify a property such as
+"the algorithm eventually terminates successfully with probability 1",
+it is first necessary to identify the states of the model
+which correspond to situations where "the algorithm has terminated successfully".
+In terms of the way temporal logics are usually presented,
+these correspond to <em>atomic propositions</em>.
+</p>
+<p class='vspace'>In PRISM, this is achieved simply by writing an <a class='wikilink' href='../ThePRISMLanguage/Expressions.html'>expression</a> in the PRISM language which evaluates to a Boolean value. This expression will typically contain references to variables (and constants) from the model to which it relates. The set of states corresponding to this expression is those for which it evaluates to <code>true</code>. We say that the expression is "satisfied" in these states.
+</p>
+<p class='vspace'>For example, in the property given above:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismkeyword">init</span>" =&gt; <span class="prismkeyword">P</span>&lt;<span class="prismnum">0.1</span> [ <span class="prismkeyword">F</span>&lt;=<span class="prismnum">100</span> <span class="prismident">num_errors</span> &gt; <span class="prismnum">5</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>the expression <code>num_errors &gt; 5</code> is used to identify states of the model where more than 5 errors have occurred.
+</p>
+<p class='vspace'>It is also common to use <a class='wikilink' href='../ThePRISMLanguage/FormulasAndLabels.html'>labels</a> to identify states in this way, like <code>"terminate"</code> in the example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">1</span> [ <span class="prismkeyword">F</span> "<span class="prismident">terminate</span>" ]<br/>
+</div></div>
+</div>
+<p class='vspace'>Properties can refer to <a class='wikilink' href='../ThePRISMLanguage/FormulasAndLabels.html'>labels</a> either from the model to which the property relates, or included in the same <a class='wikilink' href='PropertiesFiles.html'>properties file</a>.
+</p><hr />
+<h1>The P Operator</h1>
+<p>One of the most important operators in the PRISM property specification language is the <code><strong>P</strong></code> operator, which is used to reason about the probability of an event's occurrence. This operator was originally proposed in the logic PCTL but also features in the other logics supported by PRISM, such as CSL. The <code><strong>P</strong></code> operator is applicable to all three model types: DTMCs, MDPs and CTMCs.
+</p>
+<p class='vspace'>Informally, the property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span> <span class="prismident">bound</span> [ <span class="prismident">pathprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>is true in a state <em>s</em> of a DTMC, MDP or CTMC if
+"the probability that path property <code>pathprop</code> is satisfied by the paths from state <em>s</em>
+meets the bound <code>bound</code>".
+A typical example of a bound would be:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0.98</span> [ <span class="prismident">pathprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which means: "the probability that <code>pathprop</code> is satisfied by the paths from state <em>s</em> is greater than 0.98". More precisely, <code>bound</code> can be any of <code>&gt;=p</code>, <code>&gt;p</code>, <code>&lt;=p</code> or <code>&lt;p</code>,
+where <code>p</code> is a PRISM language expression evaluating to a double in the range [0,1].
+</p>
+<p class='vspace'>The types of path property supported by PRISM and their semantics are discussed below.
+PRISM also supports <em>quantitative</em> properties of the form <code><strong>P</strong>=?</code> which are covered <a class='wikilink' href='QuantitativeProperties.html'>later</a> in this section.
+</p>
+<div class='vspace'></div><h3>MDPs</h3>
+<p>For MDPs, some additional clarifications are necessary.
+Whereas for DTMCs and CTMCs, probability measures over paths are well defined
+(see e.g. [<a class='wikilink' href='../Main/References.html#KSK66'>KSK66</a>] and [<a class='wikilink' href='../Main/References.html#BKH99'>BKH99</a>], respectively),
+for MDPs a probability measure can only be feasibly defined once all nondeterminism has been removed.
+Hence, the actual meaning of the property
+<code>P bound [ pathprop ]</code>
+for an MDP is taken to be 
+"the probability that <code>pathprop</code> is satisfied by the paths from state <em>s</em>
+meets the bound <code>bound</code> for <em>all possible resolutions of nondeterminism</em>".
+This means that, for an MDP, properties using the <code><strong>P</strong></code> operator actually reason about the
+<em>minimum</em> or <em>maximum</em> probability, over all possible resolutions of nondeterminism,
+that a certain type of behaviour is observed.
+This depends on the bound attached to the <code><strong>P</strong></code> operator:
+a lower bound (<code>&gt;</code> or <code>&gt;=</code>) relates to minimum probabilities
+and an upper bound (<code>&lt;</code> or <code>&lt;=</code>) to maximum probabilities.
+</p>
+<div class='vspace'></div><h3>Path properties</h3>
+<p>PRISM supports a wide range of path properties that can be used with the <code><strong>P</strong></code> operator.
+A path property is a formula that evaluates to either true or false for a single path in a model.
+Here, we review some of the simpler properties that feature a single <em>temporal operator</em>,
+as used for example in the logics PCTL and CSL. Later, we briefly describe how PRISM also supports more complex LTL-style path properties.
+</p>
+<p class='vspace'>The basic different types of path property that can be used inside the <code><strong>P</strong></code> operator are:
+</p>
+<div class='vspace'></div><ul><li><code><strong>X</strong></code> : "ne<strong>x</strong>t"
+</li><li><code><strong>U</strong></code> : "<strong>u</strong>ntil"
+</li><li><code><strong>F</strong></code> : "eventually" (sometimes called "<strong>f</strong>uture")
+</li><li><code><strong>G</strong></code> : "always" (sometimes called "<strong>g</strong>lobally")
+</li><li><code><strong>W</strong></code> : "<strong>w</strong>eak until"
+</li><li><code><strong>R</strong></code> : "<strong>r</strong>elease"
+</li></ul><p class='vspace'>In the following sections, we describe each of these <em>temporal operators</em>. We then discuss the (optional) use of time bounds with these operators. Finally, we also discuss LTL-style path properties.
+</p>
+<div class='vspace'></div><h3>"Next" path properties</h3>
+<p>The property <code><strong>X</strong> prop</code> is true for a path if <code>prop</code> is true in its second state,
+An example of this type of property, used inside a <code><strong>P</strong></code> operator, is:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&lt;<span class="prismnum">0.01</span> [ <span class="prismkeyword">X</span> <span class="prismident">y</span>=<span class="prismnum">1</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state if "the probability of the expression <code>y=1</code> being true in the next state is less than 0.01".
+</p>
+<div class='vspace'></div><h3>"Until" path properties</h3>
+<p>The property <code>prop1 <strong>U</strong> prop2</code> is true for a path if
+<code>prop2</code> is true in some state of the path and <code>prop1</code> is true in all preceding states.
+A simple example of this would be:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0.5</span> [ <span class="prismident">z</span>&lt;<span class="prismnum">2</span> <span class="prismkeyword">U</span> <span class="prismident">z</span>=<span class="prismnum">2</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state if "the probability that <code>z</code> is eventually equal to 2, and that <code>z</code> remains less than 2 up until that point, is greater than 0.5".
+</p>
+<div class='vspace'></div><h3>"Eventually" path properties</h3>
+<p>The property <code><strong>F</strong> prop</code> is true for a path if <code>prop</code> eventually becomes true at some point along the path. The <code><strong>F</strong></code> operator is in fact a special case of the <code><strong>U</strong></code> operator (you will often see <code> <strong>F</strong> prop</code> written as <code><strong>true</strong> <strong>U</strong> prop</code>). A simple example is:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&lt;<span class="prismnum">0.1</span> [ <span class="prismkeyword">F</span> <span class="prismident">z</span>&gt;<span class="prismnum">2</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state if "the probability that <code>z</code> is eventually greater than 2is less than 0.1".
+</p>
+<div class='vspace'></div><h3>"Globally" path properties</h3>
+<p>Whereas the <code><strong>F</strong></code> operator is used for "reachability" properties, <code><strong>G</strong></code> represents "invariance". The property <code><strong>G</strong> prop</code> is true of a path if <code>prop</code> remains true at all states along the path. Thus, for example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.99</span> [ <span class="prismkeyword">G</span> <span class="prismident">z</span>&lt;<span class="prismnum">10</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>states that, with probability at least 0.99, <code>z</code> never exceeds 10.
+</p>
+<div class='vspace'></div><h3>"Weak until" and "release" path properties</h3>
+<p>Like <code><strong>F</strong></code> and <code><strong>G</strong></code>, the operators <code><strong>W</strong></code> and <code><strong>R</strong></code> are derivable from other temporal operators.
+</p>
+<p class='vspace'>Weak until (<code>a <strong>W</strong> b</code>), which is equivalent to <code>(a <strong>U</strong> b) | <strong>G</strong> a</code>, requires that <code>a</code> remains true until <code>b</code> becomes true, but does not require that <code>b</code> ever does becomes true (i.e. <code>a</code> remains true forever). For example, a weak form of the until example used above is:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0.5</span> [ <span class="prismident">z</span>&lt;<span class="prismnum">2</span> <span class="prismkeyword">U</span> <span class="prismident">z</span>=<span class="prismnum">2</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which states that, with probability greater than 0.5, either <code>z</code> is always less than 2, or it is less than 2 until the point where <code>z</code> is 2.
+</p>
+<p class='vspace'>Release (<code>a <strong>R</strong> b</code>),  which is equivalent to <code>!(!a U !b)</code>, informally means that <code>b</code> is true until <code>a</code> becomes true, or <code>b</code> is true forever.
+</p>
+<div class='vspace'></div><h3>"Bounded" variants of path properties</h3>
+<p>All of the temporal operators given above, with the exception of <code><strong>X</strong></code>, have "bounded" variants, where an additional time bound is imposed on the property being satisfied. Since in DTMCs and MDPs, time progresses in discrete steps, whereas CTMCs model real (continuous) time,
+we treat these two cases separately for this operator.
+</p>
+<p class='vspace'>For a DTMC or MDP, the time interval specification must be of the form "<code>&lt;=t</code>" where <code>t</code> is a PRISM expression evaluating to a non-negative integer. A bounded until property <code>prop1 <strong>U</strong>&lt;=t prop2</code>, for example, is satisfied along a path if <code>prop2</code> becomes true within <code>t</code> steps and <code>prop1</code> is true in all states before that point.
+A typical example of this would be:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.98</span> [ <span class="prismident">y</span>&lt;<span class="prismnum">4</span> <span class="prismkeyword">U</span>&lt;=<span class="prismnum">7</span> <span class="prismident">y</span>=<span class="prismnum">4</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state if "the probability of <code>y</code> first exceeding 3 within 7 time steps is greater than or equal to 0.98". Similarly:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.98</span> [ <span class="prismkeyword">F</span>&lt;=<span class="prismnum">7</span> <span class="prismident">y</span>=<span class="prismnum">4</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>is true in a state if "the probability of <code>y</code> being equal to 4 within 7 time steps is greater than or equal to 0.98" and:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.98</span> [ <span class="prismkeyword">G</span>&lt;=<span class="prismnum">7</span> <span class="prismident">y</span>=<span class="prismnum">4</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>is true if the probability of <code>y</code> staying equal to 4 for 7 time steps is at least 0.98.
+</p>
+<p class='vspace'>The time bound can be an arbitrary (constant) expression,
+but note that you may need to bracket it,
+as in the following example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.98</span> [ <span class="prismkeyword">G</span>&lt;=(<span class="prismnum">2</span>*<span class="prismident">k</span>+<span class="prismnum">1</span>) <span class="prismident">y</span>=<span class="prismnum">4</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>In the context of a CTMC, the time interval specification <code>time</code> can take any of the three forms: <code>&gt;=t</code>, <code>&lt;=t</code> or <code>[t1,t2]</code>, where <code>t</code>, <code>t1</code> and <code>t2</code> are PRISM expressions evaluating to a non-negative doubles, and <code>t1</code> is no greater than <code>t2</code>. In each case, <code>time</code> defines an interval of real values in which the path property must be true.
+</p>
+<p class='vspace'>For example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.25</span> [ <span class="prismident">y</span>&lt;=<span class="prismnum">1</span> <span class="prismkeyword">U</span>&lt;=<span class="prismnum">6.5</span> <span class="prismident">y</span>&gt;<span class="prismnum">1</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>means that the probability of <code>y</code> being greater than 1 within 6.5 time-units (and remaining less than or equal to 1 at all preceding time-points) is at least 0.25.
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&lt;<span class="prismnum">0.4</span> [ <span class="prismkeyword">F</span>&gt;=<span class="prismnum">5.5</span> <span class="prismident">y</span>&gt;<span class="prismnum">1</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>states that the probability of <code>y</code> exceeding 1 at some point after 5.5 time-units have elapsed is less than 0.4, and:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0</span> [ <span class="prismkeyword">G</span>[<span class="prismnum">5.5</span>,<span class="prismnum">6.5</span>] <span class="prismident">y</span>&gt;<span class="prismnum">1</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>says that the probability that <code>y</code> exceeds 1 for the whole time interval <code>[5.5,6.5]</code> is greater than zero".
+</p>
+<div class='vspace'></div><h3>Transient probabilities</h3>
+<p>We can also use the bounded <code><strong>F</strong></code> operator to refer to a single time instant, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&lt;<span class="prismnum">0.01</span> [ <span class="prismkeyword">F</span>[<span class="prismnum">10</span>,<span class="prismnum">10</span>] <span class="prismident">y</span>=<span class="prismnum">6</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>refers to the probability of <code>y</code> being 6 at time instant 10.
+</p>
+<div class='vspace'></div><h3>LTL-style path properties</h3>
+<p>PRISM also supports probabilistic model checking of the temporal logic LTL (and, in fact, PCTL*). LTL provides a richer set of path properties for use with the <code><strong>P</strong></code> operator, by permitting temporal operators to be combined. Here are a few examples of properties expressible using this functionality:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0.99</span> [ <span class="prismkeyword">F</span> ( "<span class="prismident">request</span>" &amp; (<span class="prismkeyword">X</span> "<span class="prismident">ack</span>") ) ]<br/>
+</div></div>
+</div>
+<p class='vspace'>"with probability greater than 0.99, a request is eventually received, followed immediately by an acknowledgement"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;=<span class="prismnum">1</span> [ <span class="prismkeyword">G</span> <span class="prismkeyword">F</span> "<span class="prismident">send</span>" ]<br/>
+</div></div>
+</div>
+<p class='vspace'>"a message is sent infinitely often with probability 1"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&lt;<span class="prismnum">0.01</span> [ <span class="prismkeyword">F</span> <span class="prismkeyword">G</span> ("<span class="prismident">error</span>" &amp; !"<span class="prismident">repair</span>") ]<br/>
+</div></div>
+</div>
+<p class='vspace'>"the probability of an error occurring that is never repaired is less than 0.01"
+occurs?”
+</p><hr />
+<h1>Quantitative Properties</h1>
+<p>It is very often useful to take a <em>quantitative</em> approach to probabilistic model checking, computing the actual probability that some behaviour of a model is observed,
+rather than just verifying whether or not the probability is above or below a given bound.
+Hence, PRISM allows the <code><strong>P</strong></code> operator to take the following form:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismident">pathprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>These properties return a numerical rather than a Boolean value.
+The <a class='wikilink' href='TheSOperator.html'>S</a> and <a class='wikilink' href='Reward-basedProperties.html'>R</a> operators, discussed later, can also be used in this way.
+</p>
+<p class='vspace'>Note that the probability bound on a <code><strong>P</strong></code> operator can only be replaced with <code>=?</code>
+if it is the outermost operator of the property in which it appears; otherwise the semantics are not well defined. Note also that, for MDPs, the situation is slightly more complex. Probabilities for an MDP can only be computed once the nondeterminism has been resolved. Hence, PRISM actually computes either the <em>minimum</em> or <em>maximum</em> probability of a path property being satisfied, quantifying over all possible resolutions (i.e. the best and worst cases).  Therefore, for MDPs we have two possible types of property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">Pmin</span>=? [ <span class="prismident">pathprop</span> ]<br/>
+<span class="prismkeyword">Pmax</span>=? [ <span class="prismident">pathprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which return the minimum and maximum probabilities, respectively.
+</p>
+<p class='vspace'>All of these operators return a single numerical value.
+In the simplest case, where the model being verified has a single initial state,
+the numerical value returned is the one corresponding to that state.
+Hence, for example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">x</span>=<span class="prismnum">5</span>&amp;<span class="prismident">y</span>=<span class="prismnum">5</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>returns the probability of, from the initial state, reaching a state satisfying <code>x=5&amp;y=5</code>.
+It is also possible, however, to obtain the probability for an arbitrary state,
+by specifying an atomic proposition, true only in that state, inside braces (<code>{...}</code>) before the closing <code>]</code> bracket.
+This is known as a <em>filter</em>.
+For example, if the model contains two variables, <code><strong>X</strong></code> and <code>y</code>, then:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">x</span>=<span class="prismnum">5</span>&amp;<span class="prismident">y</span>=<span class="prismnum">5</span> {<span class="prismident">x</span>=<span class="prismnum">1</span>&amp;<span class="prismident">y</span>=<span class="prismnum">2</span>} ]<br/>
+</div></div>
+</div>
+<p class='vspace'>returns the probability of, from the state <code>(1,2)</code> (i.e. <code>x=1</code> and <code>y=2</code>),
+reaching a state satisfying <code>x=5&amp;y=5</code>.
+It is possible of course that the expression in the filter satisfies more than one state.
+If this the case, by default the first such state (lexicographically) is chosen.
+In this situation, PRISM will display a warning to notify you that the expression in the filter matched multiple states
+and will display what the first matching state is.
+The same approach is taken in the situation where no filter is given
+but the model contains multiple initial states.
+In this case, the numerical result obtained is for the first (lexicographically speaking) of the set of initial states.
+Note that if the expression in the filter is not satisfied by any states of the model,
+an error is reported.
+</p>
+<p class='vspace'>It is also possible to possible to request either the minimum and maximum value from a set of values.
+For example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">x</span>=<span class="prismnum">5</span>&amp;<span class="prismident">y</span>=<span class="prismnum">5</span> {<span class="prismident">y</span>=<span class="prismnum">2</span>}{<span class="prismkeyword">min</span>} ]<br/>
+<span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">x</span>=<span class="prismnum">5</span>&amp;<span class="prismident">y</span>=<span class="prismnum">5</span> {<span class="prismident">y</span>=<span class="prismnum">2</span>}{<span class="prismkeyword">max</span>} ]<br/>
+</div></div>
+</div>
+<p class='vspace'>return the minimum and maximum probability, respectively,
+of reaching a state satisfying <code>x=5&amp;y=5</code> from all the states satisfying <code>y=2</code>.
+In addition, PRISM will report the states of the model in which the minimum or maximum probability is attained.
+You can in fact also request that both the minimum and maximum value are computed simultaneously using,
+for example, <code>{y=2}{min}{max}</code>. In this case, both values will be reported, but the actual
+return value of the property will be the minimum value.
+</p>
+<p class='vspace'>Finally, note that filters can also be used for classical (bounded) <code><strong>P</strong></code> properties.
+This has no bearing on the result of model checking a property;
+it simply causes the probabilities (where non-zero) for all states satisfying the expression in the filter to be printed during model checking (in the log, if using the GUI, or to the screen, if using the command-line).
+For example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>&gt;<span class="prismnum">0.5</span> [ <span class="prismkeyword">F</span> <span class="prismident">x</span>=<span class="prismnum">5</span>&amp;<span class="prismident">y</span>=<span class="prismnum">5</span> {<span class="prismident">y</span>=<span class="prismnum">2</span>} ]<br/>
+</div></div>
+</div>
+<p class='vspace'>will return a Boolean value, depending whether the property is true in all states of the model or not,
+but the probability (where non-zero) of path property <code>F x=5&amp;y=5</code> being satisfied will be displayed for all states where <code>y=2</code>.
+</p><hr />
+<h1>The S Operator</h1>
+<p>The <code><strong>S</strong></code> operator is used to reason about the <em>steady-state</em> behaviour of a model,
+i.e. its behaviour in the <em>long-run</em> or <em>equilibrium</em>.
+Although this could in principle relate to all three model types,
+PRISM currently only provides support for DTMCs and CTMCs.
+The definition of steady-state (long-run) probabilities for finite DTMCS and CTMCs is well defined (see e.g. [<a class='wikilink' href='../Main/References.html#Ste94'>Ste94</a>]).
+Informally, the property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">S</span> <span class="prismident">bound</span> [ <span class="prismident">prop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>is true in a state <em>s</em> of a DTMC or CTMC if
+"starting from <em>s</em>, the steady-state (long-run) probability of being in a state which satisfies the (Boolean-valued) PRISM property <code>prop</code>, meets the bound <code>bound</code>".
+A typical example of this type of property would be:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">S</span>&lt;<span class="prismnum">0.05</span> [ <span class="prismident">queue_size</span> / <span class="prismident">max_size</span> &gt; <span class="prismnum">0.75</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which means: "the long-run probability of the queue being more than 75% full is less than 0.05".
+</p>
+<p class='vspace'>Like the <code><strong>P</strong></code> operator, the <code><strong>S</strong></code> operator can be used in a <a class='wikilink' href='QuantitativeProperties.html'>quantitative</a> form, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">S</span>=? [ <span class="prismident">queue_size</span> / <span class="prismident">max_size</span> &gt; <span class="prismnum">0.75</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>including the use of <a class='wikilink' href='QuantitativeProperties.html'>filters</a>.
+</p><hr />
+<h1>Reward-based Properties</h1>
+<p>PRISM models can be augmented with information about <a class='wikilink' href='../ThePRISMLanguage/CostsAndRewards.html'>rewards</a> (or, equivalently, costs).
+The tool can analyse properties which relate to the <em>expected values</em> of these rewards.
+This is achieved using the <code><strong>R</strong></code> operator, which works in a similar fashion to the
+<code><strong>P</strong></code> and <code><strong>S</strong></code> operators, and can be used either in a Boolean-valued query, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span> <span class="prismident">bound</span> [ <span class="prismident">rewardprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>where <code>bound</code> takes the form <code>&lt;r</code>, <code>&lt;=r</code>, <code>&gt;r</code> or <code>&gt;=r</code> for an expression <code>r</code> evaluating to a non-negative double,
+or a real-valued query, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span> <span class="prismident">query</span> [ <span class="prismident">rewardprop</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>where <code>query</code> is <code>=?</code> for a DTMC or CTMC, and <code>min=?</code> or <code>max=?</code> for MDPs.
+In the latter case, <a class='wikilink' href='QuantitativeProperties.html'>filters</a> can be used, as for the <code><strong>P</strong></code> and <code><strong>S</strong></code> operators.
+</p>
+<p class='vspace'>Informally, "<code><strong>R</strong> bound [ rewardprop ]</code>" is true in a state of a model if
+"the expected reward associated with <code>rewardprop</code> of the model when starting from that state''
+meets the bound <code>bound</code> and "<code><strong>R</strong> query [ rewardprop ]</code>"  returns the actual expected reward value.
+</p>
+<p class='vspace'>There are four different types of reward properties, namely:
+</p>
+<div class='vspace'></div><ul><li>"reachability reward": <code><strong>F</strong> prop</code>
+</li><li>"cumulative reward" : <code><strong>C</strong>&lt;=t</code>
+</li><li>"instantaneous reward" : <code><strong>I</strong>=t</code>
+</li><li>"steady-state reward" : <code><strong>S</strong></code>.
+</li></ul><p class='vspace'>Below, we consider each of these cases in turn.
+The descriptions here are kept relatively informal.
+For precise definitions (in the case of DTMCs and CTMCs), see [<a class='wikilink' href='../Main/References.html#KNP07a'>KNP07a</a>].
+</p>
+<div class='vspace'></div><h3>"Reachability reward" properties</h3>
+<p>"Reachability reward" properties associate a reward with each path of a model.
+More specifically, they refer to the reward accumulated along a path until a certain point is reached.
+The manner in which rewards are accumulated depends on the model type.
+For DTMCs and MDPs, the total reward for a path is the sum of the state rewards for each state along the path
+plus the sum of the transition rewards for each transition between these states.
+The situation for CTMCs is similar, except that the state reward assigned to each state
+of the model is interpreted as the <em>rate</em> at which rewards are accumulated in that state,
+i.e. if <em>t</em> time units are spent in a state with state reward <em>r</em>,
+the reward accumulated in that state is <em>r</em> x <em>t</em>.
+Hence, the total reward for a path in a CTMC is the sum of these products for each state along the path
+plus the sum of the transition rewards for each transition between these states.
+</p>
+<p class='vspace'>The reward property "<code>F prop</code>" corresponds to the reward cumulated along a path
+until a state satisfying property <code>prop</code> is reached,
+where rewards are cumulated as described above.
+State rewards for the <code>prop</code>-satisfying state reached are not included in the cumulated value.
+In the case where the probability of reaching a state satisfying <code>prop</code> is less than 1, the reward is equal to infinity.
+</p>
+<p class='vspace'>A common application of this type of property is the case when the rewards associated with the model correspond to time.
+One can then state, for example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>&lt;=<span class="prismnum">9.5</span> [ <span class="prismkeyword">F</span> <span class="prismident">z</span>=<span class="prismnum">2</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state <em>s</em> if "the expected time taken to reach, from <em>s</em>, a state where <code>z</code> equals 2 is less than or equal to 9.5".
+</p>
+<div class='vspace'></div><h3>"Cumulative reward" properties</h3>
+<p>"Cumulative reward" properties also associate a reward with each path of a model,
+but only up to a given time bound.
+The property <code>C&lt;=t</code> corresponds to the reward cumulated along a path
+until <code>t</code> time units have elapsed.
+For DTMCs and MDPs, the bound <code>t</code> must evaluate to an integer;
+for CTMCs, it can evaluate to double.
+State and transition rewards along a path are cumulated exactly as described in the previous section.
+</p>
+<p class='vspace'>A typical application of this type of property is the following.
+Consider a model of a disk-drive controller which includes a queue of incoming disk requests.
+If we assign a reward of 1 to each transition of the model
+corresponding to the situation where an incoming request is lost because the queue is full,
+then the property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>=? [ <span class="prismkeyword">C</span>&lt;=<span class="prismnum">15.5</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>would return, for a given state of the model,
+"the expected number of lost requests within 15.5 time units of operation".
+</p>
+<div class='vspace'></div><h3>"Instantaneous reward" properties</h3>
+<p>"Instantaneous reward" properties refer to the reward of a model at a particular instant in time.
+The reward property <code>I=t</code> associates with a path the reward in the state 
+of that path when exactly <code>t</code> time units have elapsed.
+For DTMCs and MDPs, the bound <code>t</code> must evaluate to an integer;
+for CTMCs, it can evaluate to double.
+</p>
+<p class='vspace'>Returning to our example from the previous section of a model for a disk-request queue in a disk-drive controller,
+consider the case where the rewards assigned to each state of the model give the current size of the queue in that state.
+Then, the following property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>&lt;<span class="prismnum">4.4</span> [ <span class="prismkeyword">I</span>=<span class="prismnum">100</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>would be true in a state <em>s</em> of the model if
+"starting from <em>s</em>, the expected queue size exactly 100 time units later is less than 4.4".
+Note that, for this type of reward property, state rewards for CTMCs do not have to refer to rates;
+they can refer to any instantaneous measure of interest for a state.
+</p>
+<div class='vspace'></div><h3>"Steady-state reward" properties</h3>
+<p>Unlike the previous three types of property,
+"steady-state reward" properties relate not to paths, but rather to the reward in the long-run.
+A typical application of this type of property would be, in the case where
+the rewards associated with the model correspond to power consumption, the property:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>&lt;=<span class="prismnum">0.7</span> [ <span class="prismkeyword">S</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>which is true in a state <em>s</em> if "starting from <em>s</em>, the long-run average power consumption is less than 0.7".
+</p>
+<div class='vspace'></div><h3>Which reward structure?</h3>
+<p>In the case where a PRISM model has multiple <a class='wikilink' href='../ThePRISMLanguage/CostsAndRewards.html'>reward structures</a> you may need to specify which reward structure your property refers to. This is done by placing the information in braces (<code>{}</code>) after the <code>R</code> operator. You can do so either using the name assigned to a reward structure (if any) or using the index (where <code>1</code> means the first rewards structure in the PRISM model file, <code>2</code> the second, etc.). Examples are:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>{"<span class="prismident">num_failures</span>"}=? [ <span class="prismkeyword">C</span>&lt;=<span class="prismnum">10.0</span> ]<br/>
+<span class="prismkeyword">R</span>{"<span class="prismident">time</span>"}=? [ <span class="prismkeyword">F</span> <span class="prismident">step</span>=<span class="prismident">final</span> ]<br/>
+<span class="prismkeyword">R</span>{<span class="prismnum">2</span>}=? [ <span class="prismkeyword">F</span> <span class="prismident">step</span>=<span class="prismident">final</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>Note that when using an index to specify the reward structure, you can actually put any expression that evaluates to an integer. This allows you to, for example, write a property of the form <code>R{c}=?[...]</code> where <code>c</code> is an undefined integer constant. You can then vary the value of <code>c</code> in an experiment and compute values for several different reward structures at once.
+</p>
+<p class='vspace'>If you don't specify a reward structure to the <code>R</code> operator, by default, the first one in the model file is used.
+</p>
+<div class='vspace'></div><h3>Availability</h3>
+<p>There are currently a few restrictions on the model checking <a class='wikilink' href='../ConfiguringPRISM/ComputationEngines.html'>engines</a> that can be used for some reward properties. The following table summarises the currently availability, where S, M and H denote the "sparse", "MTBDD" and "hybrid" engines, respectively.
+</p>
+<div class='vspace'></div>
+<table border='1' ><tr ><td >&nbsp;</td><td  align='center'><code><strong>F</strong></code></td><td  align='center'><code><strong>C</strong>&lt;=t</code></td><td  align='left'><code><strong>I</strong>=t</code></td><td  align='right'><code><strong>S</strong></code></td></tr>
+<tr ><td  align='center'><strong>DTMCs</strong></td><td  align='center'>SMH</td><td  align='center'>SMH</td><td  align='center'>SMH</td><td  align='right'>SMH</td></tr>
+<tr ><td  align='center'><strong>CTMCs</strong></td><td  align='center'>SMH</td><td  align='center'>SMH</td><td  align='center'>SMH</td><td  align='right'>SMH</td></tr>
+<tr ><td  align='center'><strong>MDPs</strong></td><td  align='center'>SM-</td><td  align='center'>---</td><td  align='center'>SM-</td><td  align='right'>n/a</td></tr>
+</table><hr />
+<h1>Syntax And Semantics</h1>
+<p>The three principal operators of the PRISM property specification language, namely <code><strong>P</strong></code>, <code><strong>S</strong></code> and <code><strong>R</strong></code>, can be combined into any valid, well-typed PRISM <a class='wikilink' href='../ThePRISMLanguage/Expressions.html'>expression</a>. This mean that any of the following operators can be used:
+</p>
+<div class='vspace'></div><ul><li><code>-</code> (unary minus)
+</li><li><code>*</code>, <code>/</code> (multiplication, division)
+</li><li><code>+</code>, <code>-</code> (addition, subtraction)
+</li><li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>&gt;</code> (relational operators)
+</li><li><code>=</code>, <code>!=</code> (equality operators)
+</li><li><code>!</code> (negation)
+</li><li><code>&amp;</code> (conjunction)
+</li><li><code>|</code> (disjunction)
+</li><li><code>=&gt;</code> (implication)
+</li><li><code>?</code> (condition evaluation: <code>condition ? a : b</code> means "if <code>condition</code> is true then <code>a</code> else <code>b</code>")
+</li></ul><p class='vspace'>Logical operators can be used, for example, to specify any property expressible in logics such as PCTL and CSL, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismident">no_error</span>" =&gt; <span class="prismkeyword">P</span>&lt;<span class="prismnum">0.1</span> [ <span class="prismkeyword">F</span> ("<span class="prismident">error1</span>" | "<span class="prismident">error2</span>") ]<br/>
+</div></div>
+</div>
+<p class='vspace'>Other operators can also be used to derive various arithmetic expressions such as:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span>[<span class="prismnum">3600</span>,<span class="prismnum">7200</span>] <span class="prismident">oper</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>"the probability that the system is <strong>not</strong> operational at any point during the second hour of operation"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">R</span>{"<span class="prismident">oper</span>"}=? [ <span class="prismkeyword">C</span>&lt;=<span class="prismident">t</span> ] / <span class="prismident">t</span><br/>
+</div></div>
+</div>
+<p class='vspace'>"the expected fraction of time that the system is available (i.e. the expected interval availability) in the time interval [0, t]"
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">fail_A</span> ] / <span class="prismkeyword">P</span>=? [ <span class="prismkeyword">F</span> <span class="prismident">any_fail</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>"the (conditional) probability that component A eventually fails, given
+that at least one component fails"
+</p>
+<div class='vspace'></div><h3>Semantics</h3>
+<p>We omit a formal presentation of the semantics of the PRISM property language. The semantics of the probabilistic temporal logics that the language incorporates can be found from a variety of sources. See for example the pointers given in the <a class='urllink' href='http://www.prismmodelchecker.org/about.php'>About</a> and <a class='urllink' href='http://www.prismmodelchecker.org/doc/'>Documentation</a> sections of the PRISM website.
+</p>
+<p class='vspace'>It is worth, however, clarifying a few points specific to PRISM. A property is evaluated with respect to a particular state of a model. Depending on the type of the property, this value may either be a Boolean, an integer or a double. When analysing a property of a model, though, PRISM actually determines the value for all states of the model. Furthermore, the final value that PRISM returns as the result of model checking depends on the model type.
+</p>
+<p class='vspace'>For Boolean properties, such as those conforming to the classical syntax of PCTL, CSL, etc., PRISM returns a value of <code>true</code> if the property is true for <strong>all</strong> states of the model. To check if a property is satisfied in some subset of states, for example just the initial states, properties can be prefixed with an implication, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismkeyword">init</span>" =&gt; <span class="prismkeyword">P</span>&gt;=<span class="prismnum">1</span> [ <span class="prismkeyword">F</span> <span class="prismident">leader_elected</span>=<span class="prismkeyword">true</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>For numeric properties, typically a single value (for a single state) is required. The default behaviour of PRISM is to return the value for the initial state of the model. This issue was discussed in more depth in the the <a class='wikilink' href='QuantitativeProperties.html'>Quantitative Properties</a> section.
+</p>
+<div class='vspace'></div><hr />
+<h1>Properties Files</h1>
+<p>Files containing properties to be analysed by PRISM can also contain constants, as is the case for model files.
+These are defined in identical fashion, for example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">const</span> <span class="prismkeyword">int</span> <span class="prismident">k</span> = <span class="prismnum">7</span>;<br/>
+<span class="prismkeyword">const</span> <span class="prismkeyword">double</span> <span class="prismident">T</span> = <span class="prismnum">9.5</span>;<br/>
+<span class="prismkeyword">const</span> <span class="prismkeyword">double</span> <span class="prismident">p</span> = <span class="prismnum">0.01</span>;<br/>
+<br/>
+<span class="prismkeyword">P</span>&lt;<span class="prismident">p</span> [ <span class="prismkeyword">true</span> <span class="prismkeyword">U</span>&lt;=<span class="prismident">T</span> <span class="prismident">x</span>=<span class="prismident">k</span> ]<br/>
+</div></div>
+</div>
+<p class='vspace'>As before, these constants can actually be left undefined and then later
+assigned either a single value or a range of values using <a class='wikilink' href='../RunningPRISM/Experiments.html'>experiments</a>.
+</p>
+<p class='vspace'>In fact, probability bounds for the <code><strong>P</strong></code> or <code><strong>S</strong></code> operators (like <code><strong>P</strong></code> above)
+and upper or lower bounds for the <code><strong>U</strong></code> operator (like <code> T</code> above)
+can be arbitrary expressions, provided they are constant.
+Furthermore, expressions in the properties file can also refer to constants previous defined in the model file.
+</p>
+<p class='vspace'>Another feature of properties files is <em>labels</em>. These are a way of defining sets of states that will be referred to in properties (they correspond to <em>atomic propositions</em> in a temporal logic setting). As described <a class='wikilink' href='../ThePRISMLanguage/FormulasAndLabels.html'>earlier</a>, labels can be defined in either model files or property files.
+</p>
+<p class='vspace'>Labels are defined using the keyword <code><strong>label</strong></code>, followed by a name (identifier) in double quotes, and then an expression which evaluates to a Boolean. Definition and usage of formulas are illustrated in the following example:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism"><span class="prismkeyword">label</span> "<span class="prismident">safe</span>" = <span class="prismident">temp</span>&lt;=<span class="prismnum">100</span> | <span class="prismident">alarm</span>=<span class="prismkeyword">true</span>;<br/>
+<span class="prismkeyword">label</span> "<span class="prismident">fail</span>" = <span class="prismident">temp</span>&gt;<span class="prismnum">100</span> &amp; <span class="prismident">alarm</span>=<span class="prismkeyword">false</span>;<br/>
+<br/>
+<span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.99</span> [ "<span class="prismident">safe</span>" <span class="prismkeyword">U</span> "<span class="prismident">fail</span>" ]<br/>
+</div></div>
+</div>
+<p class='vspace'>Two special cases are the <code>"init"</code> and <code>"deadlock"</code> labels which are always defined.
+These are true in initial states of the model and states where deadlocks were found (and fixed by adding self-loops), respectively.
+The former is useful if you only wish to to check whether a property is true in the initial states, e.g.:
+</p>
+<div class='vspace'></div><div class='sourceblock'>
+ <div class='sourceblocktext'><div class="prism">"<span class="prismkeyword">init</span>" =&gt; <span class="prismkeyword">P</span>&gt;=<span class="prismnum">0.99</span> [ "<span class="prismident">safe</span>" <span class="prismkeyword">U</span> "<span class="prismident">fail</span>" ]<br/>
+</div></div>
+</div>
+<p class='vspace'>A PRISM properties file can contain any number of properties.
+Like model files, they can also include any amount of white space (spaces, tabs, new lines, etc.) and C-style comments, which are both ignored.
+By convention, files are given the extension <code>.pctl</code> for properties of DTMCs and MDPs
+and extension <code>.csl</code> for properties of CTMCs.
+</p>
+</div>
+
+
+<!--PageFooterFmt-->
+  <div id='prism-man-footer'>
+  </div>
+<!--/PageFooterFmt-->
+
+
+<!-- ============================================================================= -->
+
+</div> <!-- id="prism-mainbox" -->
+
+</div> <!-- id="layout-main" -->
+</div> <!-- id="layout-maincontainer" -->
+
+<div id="layout-leftcol">
+<div id="prism-navbar2">
+
+<h3><a class='wikilink' href='../Main/Welcome.html'>PRISM Manual</a></h3>
+<p><strong><a class='wikilink' href='Introduction.html'>Property Specification</a></strong>
+</p><ul><li><a class='wikilink' href='Introduction.html'>Introduction</a>
+</li><li><a class='wikilink' href='IdentifyingASetOfStates.html'>Identifying A Set Of States</a>
+</li><li><a class='wikilink' href='ThePOperator.html'>The P Operator</a>
+</li><li><a class='wikilink' href='QuantitativeProperties.html'>Quantitative Properties</a>
+</li><li><a class='wikilink' href='TheSOperator.html'>The S Operator</a>
+</li><li><a class='wikilink' href='Reward-basedProperties.html'>Reward-based Properties</a>
+</li><li><a class='wikilink' href='SyntaxAndSemantics.html'>Syntax And Semantics</a>
+</li><li><a class='wikilink' href='PropertiesFiles.html'>Properties Files</a>
+</li></ul><p>[ <a class='selflink' href='AllOnOnePage.html'>View all</a> ]
+</p>
+
+
+</div>  <!-- id="prism-navbar2" -->
+</div> <!-- id="layout-leftcol" -->
+
+</body>
+</html>
