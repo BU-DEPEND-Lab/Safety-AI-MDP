@@ -7,18 +7,15 @@ Prerequisites:
  
  Run gridworld: 
             
-              $cd ./saal
- 
-              $python run.py
+                $cd ./saal
+                $python run.py
                 
  Run mountaincar: 
     
                 $cd ./saal
- 
                 $python mountaincar.py
                 
  Run cartpole: 
               
                 $cd ./saal
- 
                 $python cartpole.py
