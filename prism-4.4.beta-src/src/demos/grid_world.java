@@ -504,15 +504,13 @@ public class grid_world {
 					e.printStackTrace();
 				}
 			}
-
+			
 			Module m_opt = Module("grid_world", mf_opt.getConstantList(), mf_opt.getFormulaList());
 			mf_opt.addModule(m_opt);
 			mf_opt.setInitialStates(new ExpressionLiteral(TypeBool.getInstance(), "x = 0 & y = 0"));
-
-			mf_opt.tidyUp();
 			
+			mf_opt.tidyUp();
 			prism.loadPRISMModel(mf_opt);
-
 			PrintStream ps_console = System.out;
 			PrintStream ps_file = new PrintStream(new FileOutputStream(
 					new File("//home/zekunzhou/workspace/Safety-AI-MDP/cirl/grid_world.pm")));

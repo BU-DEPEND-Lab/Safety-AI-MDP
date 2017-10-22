@@ -16,7 +16,8 @@ warnings.filterwarnings("ignore")
 def real_optimal(grids, agent, starts, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	expert=[]
 	if theta is None:
-		theta = np.array([1./3., 1./3., -3./3., 0.0])
+		#theta = np.array([1./3., 1./3., -3./3., 0.0])
+		theta = np.random.randint(100, size = len(grids.features[-1][-1]))
 	theta = theta/np.linalg.norm(theta, ord=2)
 	grids.w_features(theta)
 	#optimal_policy= update_policy(grids, steps= steps, epsilon= epsilon, gamma= gamma)
@@ -46,7 +47,9 @@ def demo(grids, agent, start, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	expert={}
 	agent.state=np.array(grids.states[start[0], start[1]])
 	if theta is  None:
-		theta=np.array([1./3., 1./3., -3./3., 0.0])
+		theta = np.random.randint(100, size = len(grids.features[-1][-1]))
+	theta = np.array(theta).astype(float)/np.linalg.norm(theta, ord=2)
+		#theta=np.array([1./3., 1./3., -3./3., 0.0])
 	trajectory=[{"state":agent.state, "feature": grids.features[agent.state[0]][agent.state[1]]}]
 	grids.w_features(theta)
 	pylab.close()
@@ -54,7 +57,7 @@ def demo(grids, agent, start, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	pylab.title("Generate demonstration[0:end, 1: left, 2: down, 3: right, 4: up]")
 	draw_grids(grids.rewards, trajectory)
 	print grids.rewards
-	mu=np.zeros(4)
+	mu=np.zeros(len(grids.features[-1][-1]))
 	action = 5
 	while(steps > 0 and action != 0):
 		try:
@@ -92,7 +95,7 @@ def demo(grids, agent, start, steps, theta = None, gamma=0.5, epsilon = 1e-5):
 	return expert, playagain
 	
 def calc_u(grids, agent, policy, steps, gamma=0.5):
-	mu=np.zeros(3)
+	mu=np.zeros(len(grids.features[-1][-1]))
 	trajectory=[{"state":agent.state, "feature": grids.features[agent.state[0]][agent.state[1]]}]
 	for i in range(steps):
 		action=policy[agent.state[0], agent.state[1]]
@@ -106,7 +109,7 @@ def calc_u(grids, agent, policy, steps, gamma=0.5):
 def exp_u(grids, agent, policy, start, start_action=None, steps=None, epoch=1000, gamma=0.5):
 	if steps is None:
 		steps = epoch
-	mu=np.zeros([3])
+	mu=np.zeros(len(grids.features[-1][-1]))
 	agent.state=np.array([start[0], start[1]])
 	trajectory_i_j={}
 	for i in range(epoch):
@@ -116,7 +119,7 @@ def exp_u(grids, agent, policy, start, start_action=None, steps=None, epoch=1000
 			mu_i_j_1, _= calc_u(grids, agent, policy , steps=1)
 			policy[agent.state[0], agent.state[1]]=org_action
 		else:
-			mu_i_j_1 = np.zeros([3])
+			mu_i_j_1 = np.zeros(len(grids.features[-1][-1]))
 		mu_i_j, _ =calc_u(grids, agent, policy, steps=steps)
 		mu = mu + mu_i_j + mu_i_j_1
 		#	draw(rewards, trajectory)
@@ -248,7 +251,7 @@ def optimal_feature(grids, starts, steps, policy, epsilon = 1e-5, gamma= 0.5):
 	for i in range(len(starts)):
 		exp_u = exp_u + features[starts[i][0]][starts[i][1]]
 	exp_u = exp_u/len(starts)
-	return exp_u
+	return exp_u, features
 
 
 
@@ -338,7 +341,7 @@ def update_policy(grids, values, epsilon= 1e-5, gamma=0.5):
 
 def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = None):
 	if start_theta is None:
-		start_theta=np.random.randint(-100, 100, 4)
+		start_theta=np.random.randint(-100, 100, len(grids.features[-1][-1]))
 	new_theta=start_theta/np.linalg.norm(start_theta, ord=2)
 	grids.w_features(new_theta)
 	thetas = [new_theta]
@@ -346,7 +349,7 @@ def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=10
 	policies = [new_policy]
 	values = [new_value]
 	if MC is False:
-		new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		new_mu, _ = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 	else:
 		exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 1000, epsilon = 1e-3, gamma=gamma)
 		new_mu = np.sum(np.reshape(exp_u_G, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]) * np.reshape(p_G, [grids.y_max*grids.x_max, 1]), 0)
@@ -371,7 +374,7 @@ def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=10
 		new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
 		print "new policy generated...begin next iteration"
 		if MC is False:
-			new_mu =  optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			new_mu, _ =  optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 		else:
 			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 1000, epsilon = 1e-3, gamma=gamma)
 			new_mu = np.sum(np.reshape(exp_u_G, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]) * np.reshape(p_G, [grids.y_max*grids.x_max, 1]) +   np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]) * np.reshape(p_B, [grids.y_max*grids.x_max, 1]), 0) 
@@ -415,7 +418,7 @@ def expert_train(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=10
 
 def expert_train_v1(grids, experts, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = None):
 	if start_theta is None:
-		start_theta=np.random.randint(-100, 100, 4)
+		start_theta=np.random.randint(-100, 100, len(grids.features[-1][-1]))
 	new_theta=start_theta/np.linalg.norm(start_theta, ord=2)
 	expert = np.zeros(len(grids.features[-1][-1]))
 	grids.w_features(new_theta)
@@ -507,40 +510,48 @@ def expert_update_theta(grids, expert, agent, steps, policies, mus, gamma=0.5, e
 	#for policy in policies:
 	#	mu = optimal_feature(grids, steps, policy, epsilon = epsilon, gamma=gamma)
 	#	mus.append(mu)
-	
+		
 	for i in range(len(mus)):
 		#G_i=[[], [], [], []]
-		#h_i = []
-		G_i = [[- (exp_mu[0] - mus[i][0])],
-			 [- (exp_mu[1] - mus[i][1])],
-			 [- (exp_mu[2] - mus[i][2])],
-			 [- (exp_mu[3] - mus[i][3])]
-			]
+		G_i = []
+		h_i = []
+		
+		for k in range(len(mus[i])):
+			G_i.append([- (exp_mu[k] - mus[i][k])])	
+		#G_i = [[- (exp_mu[0] - mus[i][0])],
+		#	[- (exp_mu[1] - mus[i][1])],
+		#	[- (exp_mu[2] - mus[i][2])],
+		#	[- (exp_mu[3] - mus[i][3])]
+		#]
 		h_i = [0]
 		c = matrix(mus[i] - exp_mu)
 		for j in range(len(mus)):
-			G_i[0].append(-1 * mus[i][0] - (-1) * mus[j][0])
-			G_i[1].append(-1 * mus[i][1] - (-1) * mus[j][1])
-			G_i[2].append(-1 * mus[i][2] - (-1) * mus[j][2])
-			G_i[3].append(-1 * mus[i][3] - (-1) * mus[j][3])
+			for k in range(len(mus[i])):
+				G_i[k].append(- mus[i][k] - (- mus[j][k]))	
+			#G_i[0].append(-1 * mus[i][0] - (-1) * mus[j][0])
+			#G_i[1].append(-1 * mus[i][1] - (-1) * mus[j][1])
+			#G_i[2].append(-1 * mus[i][2] - (-1) * mus[j][2])
+			#G_i[3].append(-1 * mus[i][3] - (-1) * mus[j][3])
 			h_i.append(0)
-
-		G_i[0]= G_i[0] + [0., -1., 0., 0., 0.]
-		G_i[1]= G_i[1] + [0., 0., -1., 0., 0.]
-		G_i[2]= G_i[2] + [0., 0., 0., -1., 0.]
-		G_i[3]= G_i[3] + [0., 0., 0., 0., -1.]
-		h_i = h_i + [1., 0., 0., 0., 0.]
+		for k in range(len(mus[i])):
+			G_i[k] = G_i[k] + [0.0] * (k + 1) + [-1.0] + [0.0] * (len(mus[i]) - k - 1)
+		h_i = h_i + [1] + len(mus[i]) * [0.0]
+		#G_i[0]= G_i[0] + [0., -1., 0., 0., 0.]
+		#G_i[1]= G_i[1] + [0., 0., -1., 0., 0.]
+		#G_i[2]= G_i[2] + [0., 0., 0., -1., 0.]
+		#G_i[3]= G_i[3] + [0., 0., 0., 0., -1.]
+		#h_i = h_i + [1., 0., 0., 0., 0.]
 
 		G = matrix(G_i)
 	#	h = matrix([-1 * penalty, 1., 0., 0., 0.])
 		h = matrix(h_i)
 
-		dims = {'l': 1 + len(mus), 'q': [5], 's': []}
+		dims = {'l': 1 + len(mus), 'q': [len(mus[i]) + 1], 's': []}
 		sol = solvers.conelp(c, G, h, dims)
 		sol['status']
 		solution = np.array(sol['x'])
 		if solution is not None:
-			solution=solution.reshape(4)
+			solution=solution.reshape(len(mus[i]))
 			w_delta_mu=np.dot(solution, exp_mu - mus[i])
 			w_delta_mus.append(w_delta_mu)
 		else:
@@ -572,7 +583,7 @@ def expert_update_theta_v1(grids, experts, agent, steps, policies, mus, gamma=0.
 		for j in range(len(mu_Bs)):
 			G_i_j=[[], [], [], []]
 			h_i_j = []
-			c = matrix(- ((1 - safety) * (exp_mu  -  mus[i]) + safety * (- mu_Bs[j])))
+			c = matrix(- ((1 - safety) * (exp_mu  -  mus[i]) + safety * (mus[0]- mu_Bs[j])))
 
 			#G_i_j = [[- (exp_mu[0] - mus[i][0])],
 			#	 [- (exp_mu[1] - mus[i][1])],
@@ -637,7 +648,7 @@ def expert_update_theta_v1(grids, experts, agent, steps, policies, mus, gamma=0.
 			solution = np.array(sol['x'])
 			if solution is not None:
 				solution=solution.reshape(4)
-				w_delta_mu=np.dot(solution, (1 - safety) * (exp_mu - mus[i]) + safety * (- mu_Bs[j]))
+				w_delta_mu=np.dot(solution, (1 - safety) * (exp_mu - mus[i]) + safety * (mus[0] - mu_Bs[j]))
 				w_delta_mus[i][j] = w_delta_mu
 			else:
 				w_delta_mus[i][j] = None
@@ -651,107 +662,115 @@ def expert_update_theta_v1(grids, experts, agent, steps, policies, mus, gamma=0.
 	return index, solutions[index[-1]][index[0]], w_delta_mus[index[-1]][index[0]]
 
 
-def expert_update_theta_v2(grids, expert, agent, steps, policies, mus, mu_Bs, gamma=0.5, epsilon = 1e-5, safety = None):
-	if safety is None:
-		safety = 0.5
+def expert_update_theta_v2(grids, experts, agent, steps, policies, mus, gamma=0.5, epsilon = 1e-5, safety = None):
 	mu = np.zeros(len(grids.features[-1][-1]))
 	mu_B = np.zeros(len(grids.features[-1][-1]))
 
-	for i in range(len(mus)):
-		mu =  mu + mus[i]
-	mu = mu/len(mus)
-	p = len(mu)/(len(mu) + len(mus))
-	for j in range(len(mu_Bs)):
-		mu_B = mu_B + mu_Bs[j]
-	mu_B = mu_B/len(mu_Bs)
-
+	mu_Bs = []
+	for i in experts[1][0]:
+		mu_Bs.append(i)
+	
 	delta_mus = []
-	w_delta_mus=np.zeros([len(mus), len(mu_Bs)])
-	solutions=np.zeros([len(mus), len(mu_Bs), 4])
-	exp_mu = expert
+	w_delta_mus=np.zeros([len(mus), len(mu_Bs), len(mus)])
+	solutions=np.zeros([len(mus), len(mu_Bs), len(mus), len(mus[0])])
+	exp_mu = experts[-1][-1][-1]
 	indices = []
-	index = (0, 0)
-	#for policy in policies:
-	#	mu = optimal_feature(grids, steps, policy, epsilon = epsilon, gamma=gamma)
-	#	mus.append(mu)
-	max_w_delta_mus = 0.0
-	safety = len(mu_Bs)
+	index = [0, 0, 0]
+	safety = experts[0][0]
+	max_w_delta_mus = -float('inf')
 	for i in range(len(mus)):
+		indices.append([])
 		for j in range(len(mu_Bs)):
-			G_i_j=[[], [], [], []]
-			h_i_j = []
-			c = matrix(- ((exp_mu- mus[i]) - (exp_mu - mu)) * p + (1-p) * (- mu_Bs[j] - (- mu_B)))
+			for k in range(len(mus)):
+				#G_i_j=[[], [], [], []]
+				G_i_j_k = []
+				for e in range(len(mus[k])):
+					G_i_j_k.append([])
+				h_i_j_k = []
+				c = matrix(- ((1 - safety) * (exp_mu  -  mus[i]) + safety * (mus[k]- mu_Bs[j])))
 
-			#G_i_j = [[- (exp_mu[0] - mus[i][0])],
-			#	 [- (exp_mu[1] - mus[i][1])],
-			#	 [- (exp_mu[2] - mus[i][2])],
-			#	 [- (exp_mu[3] - mus[i][3])]
-			#	]
-			#h_i_j = [0]
+				#G_i_j = [[- (exp_mu[0] - mus[i][0])],
+				#	 [- (exp_mu[1] - mus[i][1])],
+				#	 [- (exp_mu[2] - mus[i][2])],
+				#	 [- (exp_mu[3] - mus[i][3])]
+				#	]
+				#h_i_j = [0]
 
-			G_i_j[0].append(mu_Bs[j][0])
-			G_i_j[1].append(mu_Bs[j][1])
-			G_i_j[2].append(mu_Bs[j][2])
-			G_i_j[3].append(mu_Bs[j][3])
-			h_i_j.append(0)
+				#G_i_j[0].append(- (mus[j][0] - mu_Bs[i][0]))
+				#G_i_j[1].append(- (mus[j][1] - mu_Bs[i][0]))
+				#G_i_j[2].append(- (mus[j][2] - mu_Bs[i][0]))
+				#G_i_j[3].append(- (mus[j][3] - mu_Bs[i][0]))
+				#h_i_j.append(0)
 			
 						
-			#G_i_j[0].append(- (exp_mu[0] - mus[i][0] - safety * mu_Bs[j][0]))
-			#G_i_j[1].append(- (exp_mu[1] - mus[i][1] - safety * mu_Bs[j][1]))
-			#G_i_j[2].append(- (exp_mu[2] - mus[i][2] - safety * mu_Bs[j][2]))
-			#G_i_j[3].append(- (exp_mu[3] - mus[i][3] - safety * mu_Bs[j][3]))
-			#h_i_j.append(0)
+				#G_i_j[0].append(- ((1 - safety) * (exp_mu[0] - mus[i][0]) + safety * (mus[i][0] - mu_Bs[j][0])))
+				#G_i_j[1].append(- ((1 - safety) * (exp_mu[1] - mus[i][1]) + safety * (mus[i][1] - mu_Bs[j][1])))
+				#G_i_j[2].append(- ((1 - safety) * (exp_mu[2] - mus[i][2]) + safety * (mus[i][2] - mu_Bs[j][2])))
+				#G_i_j[3].append(- ((1 - safety) * (exp_mu[3] - mus[i][3]) + safety * (mus[i][3] - mu_Bs[j][3])))
+				#h_i_j.append(0)
 
-			for m in range(len(mus)):
-				for n in range(len(mu_Bs)):
-					G_i_j[0].append((- mu_Bs[j][0] - mus[i][0]) * p - (1-p) * (- mus[m][0] - mu_Bs[n][0]))
-					G_i_j[1].append((- mu_Bs[j][1] - mus[i][1]) * p - (1-p) * (- mus[m][1] - mu_Bs[n][1]))
-					G_i_j[2].append((- mu_Bs[j][2] - mus[i][2]) * p - (1-p) * (- mus[m][2] - mu_Bs[n][2]))
-					G_i_j[3].append((- mu_Bs[j][3] - mus[i][3]) * p - (1-p) * (- mus[m][3] - mu_Bs[n][3]))
-					h_i_j.append(0)
-		
-				G_i_j[0].append(- mus[i][0] - (- mus[m][0]))
-				G_i_j[1].append(- mus[i][1] - (- mus[m][1]))
-				G_i_j[2].append(- mus[i][2] - (- mus[m][2]))
-				G_i_j[3].append(- mus[i][3] - (- mus[m][3]))
-				h_i_j.append(0)
-					
-			for n in range(len(mu_Bs)):
-				G_i_j[0].append(- mu_Bs[n][0] - (- mu_Bs[j][0]))
-				G_i_j[1].append(- mu_Bs[n][1] - (- mu_Bs[j][1]))
-				G_i_j[2].append(- mu_Bs[n][2] - (- mu_Bs[j][2]))
-				G_i_j[3].append(- mu_Bs[n][3] - (- mu_Bs[j][3]))
-				h_i_j.append(0)
+			#	for m in range(len(mus)):
+			#		for n in range(len(mu_Bs)):
+			#			for l in range(len(mus)):
+			#				G_i_j[0].append(safety * mus[k][0] - safety * mu_Bs[j][0] - (1 - safety) * mus[i][0] - ( - (1 - safety) * mus[m][0] + safety * mus[l][0] - safety * mu_Bs[n][0]))
+			#				G_i_j[1].append(safety * mus[k][1] - safety * mu_Bs[j][1] - (1 - safety) * mus[i][1] - ( - (1 - safety) * mus[m][1] + safety * mus[l][0] - safety * mu_Bs[n][1]))
+			#				G_i_j[2].append(safety * mus[k][2] - safety * mu_Bs[j][2] - (1 - safety) * mus[i][2] - ( - (1 - safety) * mus[m][2] + safety * mus[l][0] - safety * mu_Bs[n][2]))
+			#				G_i_j[3].append(safety * mus[k][3] - safety * mu_Bs[j][3] - (1 - safety) * mus[i][3] - ( - (1 - safety) * mus[m][3] + safety * mus[l][0] - safety * mu_Bs[n][3]))
+			#				h_i_j.append(0)
+
+				for m in range(len(mus)):
+					for e in range(len(mus[m])):
+						G_i_j_k[e].append(- (1 - safety) * (exp_mu[e] - mus[m][e]))
+					h_i_j_k.append(0)
+					#G_i_j[0].append(- (exp_mu[0] - mus[m][0]))
+					#G_i_j[1].append(- (exp_mu[1] - mus[m][1]))
+					#G_i_j[2].append(- (exp_mu[2] - mus[m][2]))
+					#G_i_j[3].append(- (exp_mu[3] - mus[m][3]))
+					#h_i_j.append(0)
 				
+			
+						
+				for n in range(len(mu_Bs)):
+					for l in range(len(mus)):
+						for e in range(len(mus[l])):
+							G_i_j_k[e].append(safety * (mus[k][e] - mu_Bs[j][e] - (mus[l][e] - mu_Bs[n][e])))
+						h_i_j_k.append(0)
+						#G_i_j[0].append(mus[k][0] - mu_Bs[j][0] - (mus[l][0] - mu_Bs[n][0]))
+						#G_i_j[1].append(mus[k][1] - mu_Bs[j][1] - (mus[l][1] - mu_Bs[n][1]))
+						#G_i_j[2].append(mus[k][2] - mu_Bs[j][2] - (mus[l][2] - mu_Bs[n][2]))
+						#G_i_j[3].append(mus[k][3] - mu_Bs[j][3] - (mus[l][3] - mu_Bs[n][3]))
+						#h_i_j.append(0)
+				
+				for e in range(len(mus[i])):
+					G_i_j_k[e] = G_i_j_k[e] + [0.0] * (e + 1) + [-1.0] + [0.0] * (len(mus[i]) - e - 1)
+				h_i_j_k = h_i_j_k + [1] + len(mus[i]) * [0.0]
 
-			G_i_j[0]= G_i_j[0] + [0., -1., 0., 0., 0.]
-			G_i_j[1]= G_i_j[1] + [0., 0., -1., 0., 0.]
-			G_i_j[2]= G_i_j[2] + [0., 0., 0., -1., 0.]
-			G_i_j[3]= G_i_j[3] + [0., 0., 0., 0., -1.]
-			h_i_j = h_i_j + [1., 0., 0., 0., 0.]
-
-			G = matrix(G_i_j)
-		#	h = matrix([-1 * penalty, 1., 0., 0., 0.])
-			h = matrix(h_i_j)
-			dims = {'l':  1 + len(mu_Bs) + len(mus) + len(mu_Bs) * len(mus), 'q': [5], 's': []}
-			sol = solvers.conelp(c, G, h, dims)
-			sol['status']
-			solution = np.array(sol['x'])
-			if solution is not None:
-				solution=solution.reshape(4)
-				w_delta_mu=np.dot(solution, p * ((exp_mu- mus[i]) - (exp_mu - mu)) + (1-p) * (- mu_Bs[j] - (- mu_B)))
-				w_delta_mus[i][j] = w_delta_mu
-			else:
-				w_delta_mus[i][j] = None
-			solutions[i][j]=solution
-		indices.append(np.argmax(w_delta_mus[i]))
-		if w_delta_mus[i][indices[-1]] > max_w_delta_mus:
-			max_w_delta_mus = w_delta_mus[i][indices[-1]]
-			index = (i, indices[-1])
-	#solution = delta_mus[index]/np.linalg.norm(delta_mus[index], ord =2)
-	#delta_mu = np.linalg.norm(delta_mus[index], ord =2)  
-	return index, solutions[index[0]][index[1]], w_delta_mus[index[0]][index[1]]
-
+				#G_i_j[0]= G_i_j[0] + [0., -1., 0., 0., 0.]
+				#G_i_j[1]= G_i_j[1] + [0., 0., -1., 0., 0.]
+				#G_i_j[2]= G_i_j[2] + [0., 0., 0., -1., 0.]
+				#G_i_j[3]= G_i_j[3] + [0., 0., 0., 0., -1.]
+				#h_i_j = h_i_j + [1., 0., 0., 0., 0.]
+				G = matrix(G_i_j_k)
+				h = matrix(h_i_j_k)
+				#G = matrix(G_i_j)
+			#	h = matrix([-1 * penalty, 1., 0., 0., 0.])
+				#h = matrix(h_i_j)
+				dims = {'l':  len(mus) + len(mu_Bs) * len(mus), 'q': [1 + len(mus[i])], 's': []}
+				sol = solvers.conelp(c, G, h, dims)
+				sol['status']
+				solution = np.array(sol['x'])
+				if solution is not None:
+					solution=solution.reshape(len(mus[i]))
+					w_delta_mu=np.dot(solution, (1 - safety) * (exp_mu - mus[i]) + safety * (mus[k] - mu_Bs[j]))
+					w_delta_mus[i][j][k] = w_delta_mu
+				else:
+					w_delta_mus[i][j][k] = None
+				solutions[i][j][k]=solution/np.linalg.norm(solution, ord=2)
+			indices[i].append(np.argmax(w_delta_mus[i][j]))
+			if w_delta_mus[i][j][indices[i][j]] > max_w_delta_mus:
+				max_w_delta_mus = w_delta_mus[i][j][indices[i][j]]
+				index = [indices[i][j], j, i]
+	return index, solutions[index[-1]][index[-2]][index[0]], w_delta_mus[index[-1]][index[-2]][index[0]]
 
 
 def multi_learn(grids, agent, theta, exp_policy, exp_mu, starts=None, steps=float("inf"), epsilon=1e-4, iteration=20, gamma=0.9, safety = 0.02):
@@ -783,310 +802,253 @@ def multi_learn(grids, agent, theta, exp_policy, exp_mu, starts=None, steps=floa
 	print new_policy 
 	return new_policy
 
-
-def expert_synthesize(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = 0.0001):
-	print "Human demo feature ", expert
-	print "Initial theta ", start_theta
-	theta = start_theta
-	flag = float('inf')
-	index = []
-	mu_Bs = []
-	mus = []
-	policies = []	
-	grids.w_features(theta)
-	new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-	policies = policies + [new_policy]
-	start_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	#new_mu = start_mu
-	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-	p_B_sum = np.sum(np.reshape(p_B, [grids.y_max * grids.x_max, 1]))
-	print "Initial unsafe path rate ", p_B_sum
-	if p_B_sum <= safety:
-		return start_theta, new_policy, new_value, start_mu
-	while p_B_sum > safety:
-		new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-		mu_Bs = mu_Bs + [new_mu_B]
-		print "Add counterexample features ", new_mu_B	
-
-		print "Keep generating counterexamples until find a safe candidate" 
-		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
-		#new_index, new_theta, w_delta_mu = expert_update_theta(grids, new_mu, agent, steps, policies, mu_Bs, gamma, epsilon)
-		grids.w_features(new_theta)
-		print "Weight learnt from counterexamples ", new_theta
-
-		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-		new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-		exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-		p_B_sum = np.sum(np.reshape(p_B, [grids.y_max * grids.x_max, 1]))
-		print "Policy unsafe rate ", p_B_sum
-     	print "Found 1st safe policy towards safety ", new_theta	
-	#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	mus = mus + [new_mu]
-	print "Corresponding feature ", new_mu
-	flag = [new_theta, new_policy, new_value, new_mu]
-	step = abs(np.linalg.norm(expert - new_mu, ord=2) - np.linalg.norm(expert - start_mu, ord=2))/(np.linalg.norm(expert - new_mu, ord=2) + np.linalg.norm(expert- start_mu, ord=2))
-	print "Add weight towards safety with stepsize ", step
-	temp_theta = start_theta + step * new_theta
-	theta = temp_theta/np.linalg.norm(temp_theta, ord=2)
-	grids.w_features(theta)
-	print "New candidate weight ", theta
-	new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
-	policies = policies + [new_policy]
-	mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	print "New candidate feature ", mu
-	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-	p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-	
-	i = 1	
-	while True:
-		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", theta, "\nunsafe prob:", p_B_sum, "\nfeature ", mu, "\ncurrent best deviation from expert: ", np.linalg.norm(expert - flag[-1], ord=2) 
-		i = i + 1
-		if p_B_sum > safety:
-			while p_B_sum > safety:
-				new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-				mu_Bs = mu_Bs + [new_mu_B]
-				print "Add counterexample feature ", new_mu_B	
-
-				print "Keep generating counterexamples until find a safe candidate" 
-				new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
-				grids.w_features(new_theta)
-				print "Weight learnt from counterexamples ", new_theta
-
-				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-				exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-				p_B_sum = np.sum(np.reshape(p_B, [grids.y_max * grids.x_max, 1]))
-				print "Policy unsafe rate ", p_B_sum
-			print "Found safe weight towards safety ", new_theta
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			mus = mus + [new_mu]
-			print "Corresponding feature ", new_mu
-
-			step = abs(np.linalg.norm(expert - new_mu, ord=2) - np.linalg.norm(expert - mu, ord=2))/(np.linalg.norm(expert - new_mu, ord=2) + np.linalg.norm(expert- mu, ord=2))
-			print "Add weight towards safety with stepsize ", step
-			temp_theta = theta + step * new_theta
-			theta = temp_theta/np.linalg.norm(temp_theta, ord=2)
-			grids.w_features(theta)
-			print "New candidate weight ", theta
-
-			new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
-			policies = policies + [new_policy]
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "New candidate feature ", mu
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-		else:	
-			if len(flag) > 0 and np.linalg.norm(flag[-1] - mu, ord=2) < epsilon:
-				print "new safe theta ", theta, " \nfeature ", mu, "\ndifference with the best one", np.linalg.norm(flag[-1] - mu, ord=2), " unsafe rate ", p_B_sum
-				flag = [theta, new_policy, new_value, mu]
-				return grids, index[0], index[1], index[2]
-			elif np.linalg.norm(expert - mu, ord=2)  < np.linalg.norm(expert - flag[-1], ord=2):
-				flag = [theta, new_policy, new_value, mu]
-				print "New best candidate found ", flag[0]
-
-			print "Add new candidate policy expected feature", mu
-			mus = mus + [mu]
-			new_index, new_theta, w_delta_mu = expert_update_theta(grids, expert, agent, steps, policies, mus, gamma, epsilon)
-			new_theta = new_theta/np.linalg.norm(new_theta, ord=2)
-			grids.w_features(new_theta)
-			print "Found weight towards human demo ", new_theta
-
-			new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
-			policies = policies + [new_policy]
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "Corresponding feature ", new_mu 
-			'''
-			new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
-			policies = policies + [new_policy]
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-			if p_B_sum > safety:
-				new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-				mu_Bs = mu_Bs + new_mu_B
-			else:
-				new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-				mus = mus + new_mu
-			'''
-			step = abs((mu - new_mu)/(new_mu + mu))
-			print "Add weight towards human demo with stepsize ", step
-			temp_theta = theta + step * new_theta
-			theta = temp_theta/np.linalg.norm(temp_theta, ord=2)
-			grids.w_features(theta)
-			print "New candidate weight ", theta
-
-			new_policy, new_value  = optimal_value(grids, steps = steps, epsilon= epsilon, gamma = gamma)
-			policies = policies + [new_policy]
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "New candidate feature ", mu
-			print "Deviate from expert ", np.linalg.norm(expert - mu, ord=2)
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, steps, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))			
-	print "Iteration ended, best safe theta ", index[0]
-	return grids, flag[0], flag[1], flag[2]
-
-
-
-def expert_synthesize1(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = 0.0001):
-	print "Human demo feature ", expert
-	print "Initial theta ", start_theta
-	flag = []
-	index = []
-	mu_Bs = []
-	mus = []
-	policies = []	
-	grids.w_features(start_theta)
-	start_policy, start_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-	policies = policies + [start_policy]
-	start_mu = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
-	expert = start_mu
-	#new_mu = start_mu
-	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, start_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-	p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-	print "Initial unsafe path rate ", p_B_sum
-	if p_B_sum <= safety:
-		return start_theta, start_policy, start_value, start_mu
-	while p_B_sum > safety:
-		new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-		mu_Bs = mu_Bs + [new_mu_B]
-		print "Add counterexample features ", new_mu_B	
-
-		print "Keep generating counterexamples until find a safe candidate" 
-		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
-		#new_index, new_theta, w_delta_mu = expert_update_theta(grids, new_mu, agent, steps, policies, mu_Bs, gamma, epsilon)
-		grids.w_features(new_theta)
-		print "Weight learnt from counterexamples ", new_theta
-
-		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-		new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-		exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-		p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-		print "Policy unsafe rate ", p_B_sum
-     	print "Found 1st safe policy towards safety ", new_theta	
-	#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	mus = mus + [new_mu]
-	print "Corresponding feature ", new_mu
-	K = 1.0
-	kk = 0.0
-	k = K
-	mu = k * new_mu + (1 - k) * expert
-	print "1st combined feature ", mu
-	grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, grids.x_max * grids.y_max, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-	policies = policies + [new_policy]
-	grids.w_features(theta)
-	print "Weight learnt from 1st combined feature ", theta
-
-	mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	print "Corresponding feature ", mu
-
-	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-	p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-	print "Policy unsafe rate ", p_B_sum
-
-	i = 1	
-	while True:
-		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", theta, "\nunsafe prob:", p_B_sum, "\nfeature ", mu, " = ", k, "*safe + ", 1 - k, "*expert\n" 
-		i = i + 1
-		if p_B_sum > safety:
-			print "Unsafe, learning from counterexample"
-			if k > kk:
-				kk = k
-			while p_B_sum > safety:
-				new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-				mu_Bs = mu_Bs + [new_mu_B]
-				print "Add counterexample feature ", new_mu_B	
-
-				print "Keep generating counterexamples until find a safe candidate" 
-				new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
-				grids.w_features(new_theta)
-				print "Weight learnt from counterexamples ", new_theta
-
-				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-				exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-				p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-				print "Policy unsafe rate ", p_B_sum
-			print "Found safe weight towards safety ", new_theta
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			mus = mus + [new_mu]
-			print "Corresponding feature ", new_mu
-			
-			k = k + (K - k)/2			
-			mu = k * new_mu + (1 - k) * expert
-			print "combined feature towards safety", mu
-			grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			grids.w_features(theta)
-			print "Weight learnt from combined feature ", theta
-			policies = policies + [new_policy]
-
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "Corresponding feature ", mu
-
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-			print "Policy unsafe rate ", p_B_sum
-		else:	
-			if len(flag) > 0 and abs(K - k) <= epsilon:
-				print "Difference with the best one is too small", np.linalg.norm(flag[-1] - mu, ord=2)
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-				flag = [theta, new_policy, new_value, mu]
-				return grids, flag[0], flag[1], flag[2]
-			elif len(flag) > 0 and np.linalg.norm(expert - mu, ord=2)  <= np.linalg.norm(expert - flag[-1], ord=2):
-			#elif len(flag) > 0 and np.dot(theta, expert) >= np.dot(flag[0], expert):
-				flag = [theta, new_policy, new_value, mu]
-				print "New best candidate"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-				K = k
-				k = (K + kk)/2
-			elif len(flag) == 0:
-				flag = [theta, new_policy, new_value, mu]
-				print "1st best candidate"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-				K = k
-				k = (K + kk)/2
-
-			else:
-				print "Not the best"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-				k = (k + K)/2
-
-			print "Add new candidate policy expected feature", mu
-			mus = mus + [mu]
-			
-			mu = k * new_mu + (1 - k) * expert
-			print "combined feature towards expert", mu
-			grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			grids.w_features(theta)
-			print "Weight learnt from combined feature ", theta
-			policies = policies + [new_policy]
-
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "Corresponding feature ", mu
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-			print "Policy unsafe rate ", p_B_sum
-
-	print "Iteration ended, best safe theta ", index[0]
-	return grids, flag[0], flag[1], flag[2]
-
-
-def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = 0.0001):
+def expert_synthesize(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, unsafe = None, safety = 0.0001):
 	print "Human demo feature ", expert
 	print "Initial theta ", start_theta
 	flag = None
-	index = []
+	thetas = []
 	mu_Bs = []
 	mus = []
 	policies = []	
 	grids.w_features(start_theta)
 	start_policy, start_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 	policies = policies + [start_policy]
-	start_mu = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
-	expert = start_mu
+	start_mu, MU = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
+	new_mu = start_mu
+	#mus.append(new_mu)
+	expert = np.array(start_mu)
+	print "expert feature changed to ", start_mu
+
 	new_theta = np.array(start_theta)
+	thetas.append(new_theta)
 	print "Model check ", start_theta
-	p_B_sum = output_model(grids, starts, start_policy, steps, safety)
+	p_B_sum = output_model(grids, starts, start_policy, steps, unsafe, safety)
+	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, start_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+	print "Initial unsafe path rate ", p_B_sum
+
+	print "model output finished for initial policy"
+	if p_B_sum <= safety and p_B_sum is not None:
+		return start_theta, start_policy, start_value, start_mu
+	elif p_B_sum is None:
+		print "Model checking failed"
+		return None
+	while p_B_sum > safety:
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+		#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+
+		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+		thetas.append(new_theta)
+		grids.w_features(new_theta)
+		print "Weight learnt from counterexamples ", new_theta
+
+		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+		print new_policy
+		new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		print "Corresponding feature ", new_mu
+		#mus = mus + [new_mu]
+		print "Model check ", new_theta
+		p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+		#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+		#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+		print "Policy unsafe rate ", p_B_sum
+		print "Keep generating counterexamples until find a safe candidate" 
+     	print "Found 1st safe policy towards safety ", new_theta	
+	#mus = mus + [new_mu]
+	flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+
+	print "Test hand made safe policy"
+	new_policy = np.zeros([grids.y_max, grids.x_max])
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma = gamma)
+	print "Corresponding feature ", new_mu
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+	print "Policy unsafe rate ", p_B_sum
+	if p_B_sum < safety:
+		mus = mus + [new_mu]
+		if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			flag = {'weight': -np.ones(len(grids.features[-1][-1]))/np.linalg.norm(-np.ones(len(grids.features[-1][-1])), ord = 2), 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+	else:
+		
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+	
+
+	K = 1.0
+	KK = 0.0
+	k = 0.0
+	mu = [[k,  1 - k],[mu_Bs, [expert]]]
+
+		
+	new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+	grids.w_features(new_theta)
+	print "Weight learnt from 1st combined feature ", new_theta
+	
+	new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+	print "Corresponding feature ", new_mu
+	#mus = mus + [new_mu]
+
+	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+	#print "Policy unsafe rate ", p_B_sum
+	print "Model check ", new_theta
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+
+	i = 1	
+	while True:
+		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", new_theta, "\nunsafe probability:", p_B_sum, "\nfeature ", new_mu, " = ", k, "*safe + ", 1 - k, "*expert\n" 
+		file = open('log', 'a')
+		file.write(">>>>>>>>> " + str(i) + "th iteration, candidate theta: "+ str(new_theta) + "; unsafe probability: " + str(p_B_sum) + "; feature " + str(new_mu) + " = " + str(k) + "*safe + " + str(1 - k) + "*expert\n") 
+		file.close()
+		i = i + 1
+		
+		if flag is not None and abs(K - k) < epsilon:
+			print "Difference with the best one is too small", np.linalg.norm(flag['feature'] - new_mu, ord=2)
+			#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+			#print "Expert can get value ", np.dot(theta, expertw)
+			#flag = [new_theta, new_policy, new_value, new_mu]
+			#return grids, flag[0], flag[1], flag[2]
+			break
+		if p_B_sum is not None and p_B_sum > safety:
+			print "Unsafe, learning from counterexample"
+			#while p_B_sum > safety:
+			#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+			new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			if new_mu_B is not None:
+				mu_Bs = mu_Bs + [new_mu_B]
+				print "Add counterexample features ", new_mu_B	
+
+			#print "Keep generating counterexamples until find a safe candidate" 
+			#new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+			#grids.w_features(new_theta)
+			#print "Weight learnt from counterexamples ", new_theta
+
+			#new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			#print "Policy unsafe rate ", p_B_sum
+			#print "Found safe weight towards safety ", new_theta
+			#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			#mus = mus + [new_mu]
+			KK = k
+			k = (K + KK)/2			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			print "Policy unsafe rate ", p_B_sum
+			#mus = mus + [new_mu]
+			#new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			while p_B_sum > safety and np.linalg.norm(new_mu_B - mu_Bs[-1], ord = 2)> epsilon:
+				print "Same k, found different counterexample"
+				new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+				mu_Bs = mu_Bs + [new_mu_B]	
+				mu = [[k,  1 - k],[mu_Bs, [expert]]]
+				new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+				grids.w_features(new_theta)
+				print "Weight learnt from combined feature ", new_theta
+				
+
+				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+				new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+				print "Corresponding feature ", new_mu
+				#mus = mus + [new_mu]
+			
+				print "Model check ", new_theta
+				p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+				print "Policy unsafe rate ", p_B_sum
+			if p_B_sum <= safety:
+				continue
+		elif p_B_sum is not None:	
+			print "Safe, learning from expert"
+			mus = mus + [new_mu]
+			#if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			if flag is not None and np.dot(new_theta, expert) > np.dot(flag['weight'], expert):
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+				print "New best candidate"
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				print "Expert can get value ", np.dot(new_theta, expert)
+				K = k
+				k = (K + KK)/2
+			elif flag is None:
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+				print "1st best candidate"
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				print "Expert can get value ", np.dot(new_theta, expert)
+				K = k
+				k = (K + KK)/2
+
+			else:
+				print "Not the best"
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				print "Expert can get value ", np.dot(new_theta, expert)
+				k = (K + k)/2
+
+			print "Add new candidate policy expected feature", new_mu
+			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+			policies = policies + [new_policy]
+
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			print "Policy unsafe rate ", p_B_sum
+		else:
+			print "Model checking failed"
+			return None
+
+	print "Iteration ended, best safe theta ", flag['weight']
+	print "It's unsafe probability is ", flag['unsafe']
+	print "Distance to expert feature ", np.linalg.norm(expert - flag['feature'], ord= 2)
+	return grids, flag['weight'], flag['policy'], flag['value']
+
+
+
+def expert_synthesize1(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, unsafe = None, safety = 0.0001):
+	print "Human demo feature ", expert
+	print "Initial theta ", start_theta
+	flag = None
+	thetas = []
+	mu_Bs = []
+	mus = []
+	policies = []	
+	grids.w_features(start_theta)
+	start_policy, start_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+	policies = policies + [start_policy]
+	start_mu, MU = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
+	#mus.append(start_mu)
+	new_theta = np.array(start_theta)
+	thetas.append(new_theta)
+	print "Model check ", start_theta
+	p_B_sum = output_model(grids, starts, start_policy, steps, unsafe, safety)
 	#new_mu = start_mu
 	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, start_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
 	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
@@ -1099,13 +1061,14 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 		print "Model checking failed"
 		return None
 	while p_B_sum > safety:
-		new_mu_B =  counterexample(grids, gamma, safety, epsilon)
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
 		#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
 		if new_mu_B is not None:
 			mu_Bs = mu_Bs + [new_mu_B]
 			print "Add counterexample features ", new_mu_B	
 
 		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+		thetas.append(new_theta)
 		#new_index, new_theta, w_delta_mu = expert_update_theta(grids, new_mu, agent, steps, policies, mu_Bs, gamma, epsilon)
 		grids.w_features(new_theta)
 		print "Weight learnt from counterexamples ", new_theta
@@ -1113,28 +1076,50 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 		print new_policy
 		#print new_policy
+		new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		print "Corresponding feature ", new_mu
 		print "Model check ", new_theta
-		p_B_sum = output_model(grids, starts, new_policy, steps, safety)
+		p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 		#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
 		#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 		print "Policy unsafe rate ", p_B_sum
 		print "Keep generating counterexamples until find a safe candidate" 
      	print "Found 1st safe policy towards safety ", new_theta	
-	new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 	mus = mus + [new_mu]
+	flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+
+	print "Test hand made safe policy"
+	new_policy = np.zeros([grids.y_max, grids.x_max])
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma = gamma)
 	print "Corresponding feature ", new_mu
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+	print "Policy unsafe rate ", p_B_sum
+	if p_B_sum < safety:
+		mus = mus + [new_mu]
+		if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			flag = {'weight': None, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+	else:
+		
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+	
 
 	K = 1.0
 	KK = 0.0
-	k = 1.0
+	k = 0.0
 	mu = [[k,  1 - k],[mu_Bs, [expert]]]
 
 		
-	new_index, new_theta, w_delta_mu = expert_update_theta_v1(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+	new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
 	#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
 	grids.w_features(new_theta)
 	print "Weight learnt from 1st combined feature ", new_theta
-	new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+	
+	new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 	print "Corresponding feature ", new_mu
 	#mus = mus + [new_mu]
 
@@ -1142,7 +1127,7 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 	#print "Policy unsafe rate ", p_B_sum
 	print "Model check ", new_theta
-	p_B_sum = output_model(grids, starts, new_policy, steps, safety)
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 
 	i = 1	
 	while True:
@@ -1166,7 +1151,7 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 			print "Unsafe, learning from counterexample"
 			#while p_B_sum > safety:
 			#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-			new_mu_B =  counterexample(grids, gamma, safety, epsilon)
+			new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
 			if new_mu_B is not None:
 				mu_Bs = mu_Bs + [new_mu_B]
 				print "Add counterexample features ", new_mu_B	
@@ -1184,33 +1169,54 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 			#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 			#mus = mus + [new_mu]
 			KK = k
-			k = k + (K - k)/2			
+			k = (K + KK)/2			
 			mu = [[k,  1 - k],[mu_Bs, [expert]]]
 			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			new_index, new_theta, w_delta_mu = expert_update_theta_v1(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
 			grids.w_features(new_theta)
 			print "Weight learnt from combined feature ", new_theta
 
 			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 			print "Corresponding feature ", new_mu
 			#mus = mus + [new_mu]
 			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
 			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 			print "Model check ", new_theta
-			p_B_sum = output_model(grids, starts, new_policy, steps, safety)
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 			print "Policy unsafe rate ", p_B_sum
 			#mus = mus + [new_mu]
+			new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			while p_B_sum > safety and np.linalg.norm(new_mu_B - mu_Bs[-1], ord = 2)> epsilon:
+				print "Same k, found different counterexample"
+				mu_Bs = mu_Bs + [new_mu_B]	
+				mu = [[k,  1 - k],[mu_Bs, [expert]]]
+				new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+				grids.w_features(new_theta)
+				print "Weight learnt from combined feature ", new_theta
+				
+
+				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+				new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+				print "Corresponding feature ", new_mu
+			
+				print "Model check ", new_theta
+				p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+				print "Policy unsafe rate ", p_B_sum
+				new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			if p_B_sum <= safety:
+				continue
 		elif p_B_sum is not None:	
 			print "Safe, learning from expert"
 			mus = mus + [new_mu]
 			if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
-			#elif len(flag) > 0 and np.dot(theta, expert) > np.dot(flag[0], expert):
+			#if flag is not None and np.dot(new_theta, expert) > np.dot(flag['weight'], expert):
 				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
 				print "New best candidate"
-				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
-				#print "Expert can get value ", np.dot(theta, expert)
+				#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(new_theta, expert)
 				K = k
 				k = (K + KK)/2
 			elif flag is None:
@@ -1231,18 +1237,18 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 			
 			mu = [[k,  1 - k],[mu_Bs, [expert]]]
 			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			new_index, new_theta, w_delta_mu = expert_update_theta_v1(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
 			grids.w_features(new_theta)
 			print "Weight learnt from combined feature ", new_theta
 			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 			policies = policies + [new_policy]
 
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 			print "Corresponding feature ", new_mu
 			#mus = mus + [new_mu]
 			
 			print "Model check ", new_theta
-			p_B_sum = output_model(grids, starts, new_policy, steps, safety)
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
 			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 			print "Policy unsafe rate ", p_B_sum
@@ -1255,10 +1261,10 @@ def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 	print "Distance to expert feature ", np.linalg.norm(expert - flag['feature'], ord= 2)
 	return grids, flag['weight'], flag['policy'], flag['value']
 
-def expert_synthesize3(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, safety = 0.0001):
+def expert_synthesize2(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, unsafe = None, safety = 0.0001):
 	print "Human demo feature ", expert
 	print "Initial theta ", start_theta
-	flag = []
+	flag = None
 	index = []
 	mu_Bs = []
 	mus = []
@@ -1266,154 +1272,452 @@ def expert_synthesize3(grids, expert, agent, starts, steps, epsilon=1e-6, iterat
 	grids.w_features(start_theta)
 	start_policy, start_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 	policies = policies + [start_policy]
-	start_mu = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
-	expert = start_mu
+	start_mu, MU = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
+	#mus.append(start_mu)
+	new_theta = np.array(start_theta)
+	print "Model check ", start_theta
+	p_B_sum = output_model(grids, starts, start_policy, steps, unsafe, safety)
 	#new_mu = start_mu
 	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, start_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
 	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-	#print "Initial unsafe path rate ", p_B_sum
-	outpu_model
-	if p_B_sum <= safety:
-		return start_theta, start_policy, start_value, start_mu
-	while p_B_sum > safety:
-		new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
-		mu_Bs = mu_Bs + [new_mu_B]
-		print "Add counterexample features ", new_mu_B	
+	print "Initial unsafe path rate ", p_B_sum
 
-		print "Keep generating counterexamples until find a safe candidate" 
+	print "model output finished for initial policy"
+	if p_B_sum <= safety and p_B_sum is not None:
+		return start_theta, start_policy, start_value, start_mu
+	elif p_B_sum is None:
+		print "Model checking failed"
+		return None
+	while p_B_sum > safety:
+		new_mu_B =  counterexample(grids, MU, gamma, safety, epsilon)
+		#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+
 		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
 		#new_index, new_theta, w_delta_mu = expert_update_theta(grids, new_mu, agent, steps, policies, mu_Bs, gamma, epsilon)
 		grids.w_features(new_theta)
 		print "Weight learnt from counterexamples ", new_theta
 
 		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-		new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-		exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-		p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+		print new_policy
+		#print new_policy
+		new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		print "Corresponding feature ", new_mu
+		print "Model check ", new_theta
+		p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+		#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+		#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 		print "Policy unsafe rate ", p_B_sum
+		print "Keep generating counterexamples until find a safe candidate" 
      	print "Found 1st safe policy towards safety ", new_theta	
-	#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 	mus = mus + [new_mu]
+
+	K = 1.0
+	KK = 0.0
+	k = 0.0
+	mu = [[k,  1 - k],[mu_Bs, [expert]]]
+
+		
+	new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+	#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+	grids.w_features(new_theta)
+	print "Weight learnt from 1st combined feature ", new_theta
+	
+	new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
 	print "Corresponding feature ", new_mu
-	K = 0.5
-	mu = 0.5 * new_mu + 0.5 * expert
-	print "1st combined feature ", mu
-	grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, grids.x_max * grids.y_max, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-	policies = policies + [new_policy]
-	grids.w_features(theta)
-	print "Weight learnt from 1st combined feature ", theta
+	#mus = mus + [new_mu]
 
-	mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-	print "Corresponding feature ", mu
-
-	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-	p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-	print "Policy unsafe rate ", p_B_sum
+	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+	#print "Policy unsafe rate ", p_B_sum
+	print "Model check ", new_theta
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 
 	i = 1	
 	while True:
-		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", theta, "\nunsafe prob:", p_B_sum, "\nfeature ", mu, " = ", K, "*safe + ", 1 - K, "*expert\n" 
+		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", new_theta, "\nunsafe probability:", p_B_sum, "\nfeature ", new_mu, " = ", k, "*safe + ", 1 - k, "*expert\n" 
 		file = open('log', 'a')
-		file.write(">>>>>>>>> " + str(i) + "th iteration, candidate theta: "+ str(theta) + "; unsafe prob: " + str(p_B_sum) + "; feature " + str(mu) + " = " + str(K) + "*safe + " + str(1 - K) + "*expert\n") 
+		file.write(">>>>>>>>> " + str(i) + "th iteration, candidate theta: "+ str(new_theta) + "; unsafe probability: " + str(p_B_sum) + "; feature " + str(new_mu) + " = " + str(k) + "*safe + " + str(1 - k) + "*expert\n") 
 		file.close()
+		#file = open('log', 'a')
+		#file.write(">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", new_theta, "\nunsafe prob:", p_B_sum, "\nfeature ", new_mu, " = ", k, "*safe + ", 1 - k, "*expert\n") 
+		#file.close()
 		i = i + 1
-		if p_B_sum > safety:
+		
+		if flag is not None and abs(K - k) < epsilon:
+			print "Difference with the best one is too small", np.linalg.norm(flag['feature'] - new_mu, ord=2)
+			#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+			#print "Expert can get value ", np.dot(theta, expertw)
+			#flag = [new_theta, new_policy, new_value, new_mu]
+			#return grids, flag[0], flag[1], flag[2]
+			break
+		if p_B_sum is not None and p_B_sum > safety:
 			print "Unsafe, learning from counterexample"
-			while p_B_sum > safety:
-				new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+			#while p_B_sum > safety:
+			#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+			new_mu_B =  counterexample(grids, MU, gamma, safety, epsilon)
+			if new_mu_B is not None:
 				mu_Bs = mu_Bs + [new_mu_B]
-				print "Add counterexample feature ", new_mu_B	
+				print "Add counterexample features ", new_mu_B	
 
-				print "Keep generating counterexamples until find a safe candidate" 
-				new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+			#print "Keep generating counterexamples until find a safe candidate" 
+			#new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+			#grids.w_features(new_theta)
+			#print "Weight learnt from counterexamples ", new_theta
+
+			#new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			#print "Policy unsafe rate ", p_B_sum
+			#print "Found safe weight towards safety ", new_theta
+			#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			#mus = mus + [new_mu]
+			KK = k
+			k = (K + KK)/2			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			print "Policy unsafe rate ", p_B_sum
+			#mus = mus + [new_mu]
+			while p_B_sum > safety and np.linalg.norm(new_mu_B - mu_Bs[-1], ord = 2) > epsilon:
+				new_mu_B =  counterexample(grids, MU, gamma, safety, epsilon)
+				print "Unsafe, learning from counterexample"
+		
+				mu = [[k,  1 - k],[mu_Bs, [expert]]]
+				new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
 				grids.w_features(new_theta)
-				print "Weight learnt from counterexamples ", new_theta
+				print "Weight learnt from combined feature ", new_theta
 
 				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
-				exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-				p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+
+				new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+				print "Corresponding feature ", new_mu
+			
+				print "Model check ", new_theta
+				p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
 				print "Policy unsafe rate ", p_B_sum
-			print "Found safe weight towards safety ", new_theta
-			new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		elif p_B_sum is not None:	
+			print "Safe, learning from expert"
 			mus = mus + [new_mu]
-			print "Corresponding feature ", new_mu
-		        K = 0.5 * K + 0.5	
-			mu = 0.5 * new_mu + 0.5 * mu
-			print "combined feature towards safety", mu
-			grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			grids.w_features(theta)
-			print "Weight learnt from combined feature ", theta
-			policies = policies + [new_policy]
-
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "Corresponding feature ", mu
-
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
-			print "Policy unsafe rate ", p_B_sum
-		else:	
-			if len(flag) > 0 and np.linalg.norm(flag[-1] - mu) < epsilon:
-				print "Difference with the best one is too small", np.linalg.norm(flag[-1] - mu, ord=2)
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-				flag = [theta, new_policy, new_value, mu]
-				return grids, flag[0], flag[1], flag[2]
-			elif len(flag) > 0 and np.linalg.norm(expert - mu, ord=2)  <= np.linalg.norm(expert - flag[-1], ord=2):
-			#elif len(flag) > 0 and np.dot(theta, expert) >= np.dot(flag[0], expert):
-				flag = [theta, new_policy, new_value, mu]
+			#if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			if flag is not None and np.dot(new_theta, expert) > np.dot(flag['weight'], expert):
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
 				print "New best candidate"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
-			elif len(flag) == 0:
-				flag = [theta, new_policy, new_value, mu]
+				#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(new_theta, expert)
+				K = k
+				k = (K + KK)/2
+			elif flag is None:
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
 				print "1st best candidate"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(theta, expert)
+				K = k
+				k = (K + KK)/2
 
 			else:
 				print "Not the best"
-				print "Feature deviation from expert ", np.linalg.norm(mu - expert, ord = 2)
-				print "Expert can get value ", np.dot(theta, expert)
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(theta, expert)
+				k = (K + k)/2
 
-			print "Add new candidate policy expected feature", mu
-			mus = mus + [mu]
-			K = 1 - (0.5 + (1 - K) * 0.5) 	
-			mu = 0.5 * mu + 0.5 * expert
-			print "combined feature towards expert", mu
-			grids, theta, new_policy, new_value = expert_train(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
-			grids.w_features(theta)
-			print "Weight learnt from combined feature ", theta
+			print "Add new candidate policy expected feature", new_mu
+			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
 			policies = policies + [new_policy]
 
-			mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
-			print "Corresponding feature ", mu
-			exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
-			p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
 			print "Policy unsafe rate ", p_B_sum
+		else:
+			print "Model checking failed"
+			return None
 
-	print "Iteration ended, best safe theta ", index[0]
-	return grids, flag[0], flag[1], flag[2]
+	print "Iteration ended, best safe theta ", flag['weight']
+	print "It's unsafe probability is ", flag['unsafe']
+	print "Distance to expert feature ", np.linalg.norm(expert - flag['feature'], ord= 2)
+	return grids, flag['weight'], flag['policy'], flag['value']
 
-def counterexample(grids, gamma = 0.99, safety = 0.01, epsilon = 1e-5):
+def expert_synthesize3(grids, expert, agent, starts, steps, epsilon=1e-6, iteration=100, gamma=0.5, start_theta= None, MC = False, unsafe = None, safety = 0.0001):
+	print "Human demo feature ", expert
+	print "Initial theta ", start_theta
+	flag = None
+	thetas = []
+	mu_Bs = []
+	mus = []
+	policies = []	
+	grids.w_features(start_theta)
+	start_policy, start_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+	policies = policies + [start_policy]
+	start_mu, MU = optimal_feature(grids, starts, steps, start_policy, epsilon = epsilon, gamma=gamma)
+	#mus.append(start_mu)
+	#expert = np.array(start_mu)
+	#print "expert feature changed to ", start_mu
+	new_theta = np.array(start_theta)
+	thetas.append(new_theta)
+	print "Model check ", start_theta
+	p_B_sum = output_model(grids, starts, start_policy, steps, unsafe, safety)
+	#new_mu = start_mu
+	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, start_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+	print "Initial unsafe path rate ", p_B_sum
+
+	print "model output finished for initial policy"
+	if p_B_sum <= safety and p_B_sum is not None:
+		return start_theta, start_policy, start_value, start_mu
+	elif p_B_sum is None:
+		print "Model checking failed"
+		return None
+	while p_B_sum > safety:
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+		#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+
+		new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+		thetas.append(new_theta)
+		#new_index, new_theta, w_delta_mu = expert_update_theta(grids, new_mu, agent, steps, policies, mu_Bs, gamma, epsilon)
+		grids.w_features(new_theta)
+		print "Weight learnt from counterexamples ", new_theta
+
+		new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+		print new_policy
+		#print new_policy
+		new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+		print "Corresponding feature ", new_mu
+		#mus = mus + [new_mu]
+		print "Model check ", new_theta
+		p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+		#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+		#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+		print "Policy unsafe rate ", p_B_sum
+		print "Keep generating counterexamples until find a safe candidate" 
+     	print "Found 1st safe policy towards safety ", new_theta	
+	#mus = mus + [new_mu]
+	flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+
+	print "Test hand made safe policy"
+	new_policy = np.zeros([grids.y_max, grids.x_max])
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma = gamma)
+	print "Corresponding feature ", new_mu
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+	print "Policy unsafe rate ", p_B_sum
+	if p_B_sum < safety:
+		mus = mus + [new_mu]
+		if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			flag = {'weight': None, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+	else:
+		
+		new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+		if new_mu_B is not None:
+			mu_Bs = mu_Bs + [new_mu_B]
+			print "Add counterexample features ", new_mu_B	
+	
+
+	K = 1.0
+	KK = 0.0
+	k = 0.0
+	mu = [[k,  1 - k],[mu_Bs, [expert]]]
+
+		
+	new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+	#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+	grids.w_features(new_theta)
+	print "Weight learnt from 1st combined feature ", new_theta
+	
+	new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+	new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+	print "Corresponding feature ", new_mu
+	#mus = mus + [new_mu]
+
+	#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+	#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+	#print "Policy unsafe rate ", p_B_sum
+	print "Model check ", new_theta
+	p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+
+	i = 1	
+	while True:
+		print ">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", new_theta, "\nunsafe probability:", p_B_sum, "\nfeature ", new_mu, " = ", k, "*safe + ", 1 - k, "*expert\n" 
+		file = open('log', 'a')
+		file.write(">>>>>>>>> " + str(i) + "th iteration, candidate theta: "+ str(new_theta) + "; unsafe probability: " + str(p_B_sum) + "; feature " + str(new_mu) + " = " + str(k) + "*safe + " + str(1 - k) + "*expert\n") 
+		file.close()
+		#file = open('log', 'a')
+		#file.write(">>>>>>>>> ", i, "th iteration\n", "candidate theta: ", new_theta, "\nunsafe prob:", p_B_sum, "\nfeature ", new_mu, " = ", k, "*safe + ", 1 - k, "*expert\n") 
+		#file.close()
+		i = i + 1
+		
+		if flag is not None and abs(K - k) < epsilon:
+			print "Difference with the best one is too small", np.linalg.norm(flag['feature'] - new_mu, ord=2)
+			#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+			#print "Expert can get value ", np.dot(theta, expertw)
+			#flag = [new_theta, new_policy, new_value, new_mu]
+			#return grids, flag[0], flag[1], flag[2]
+			break
+		if p_B_sum is not None and p_B_sum > safety:
+			print "Unsafe, learning from counterexample"
+			#while p_B_sum > safety:
+			#new_mu_B = np.sum(np.reshape(exp_u_B, [grids.y_max*grids.x_max, len(grids.features[-1][-1])]), 0) 
+			new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			if new_mu_B is not None:
+				mu_Bs = mu_Bs + [new_mu_B]
+				print "Add counterexample features ", new_mu_B	
+
+			#print "Keep generating counterexamples until find a safe candidate" 
+			#new_index, new_theta, w_delta_mu = expert_update_theta(grids, np.zeros(len(grids.features[-1][-1])), agent, steps, policies, mu_Bs, gamma, epsilon)
+			#grids.w_features(new_theta)
+			#print "Weight learnt from counterexamples ", new_theta
+
+			#new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			#print "Policy unsafe rate ", p_B_sum
+			#print "Found safe weight towards safety ", new_theta
+			#new_mu = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			#mus = mus + [new_mu]
+			KK = k
+			k = (K + KK)/2			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			print "Policy unsafe rate ", p_B_sum
+			#mus = mus + [new_mu]
+			new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			while p_B_sum > safety and np.linalg.norm(new_mu_B - mu_Bs[-1], ord = 2)> epsilon:
+				print "Same k, found different counterexample"
+				mu_Bs = mu_Bs + [new_mu_B]	
+				mu = [[k,  1 - k],[mu_Bs, [expert]]]
+				new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+				grids.w_features(new_theta)
+				print "Weight learnt from combined feature ", new_theta
+				
+
+				new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+
+				new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+				print "Corresponding feature ", new_mu
+				#mus = mus + [new_mu]
+			
+				print "Model check ", new_theta
+				p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+				print "Policy unsafe rate ", p_B_sum
+				new_mu_B =  counterexample(grids, grids.features, gamma, safety, epsilon)
+			if p_B_sum <= safety:
+				continue
+		elif p_B_sum is not None:	
+			print "Safe, learning from expert"
+			mus = mus + [new_mu]
+			if flag is not None and np.linalg.norm(expert - new_mu, ord=2)  < np.linalg.norm(expert - flag['feature'], ord=2):
+			#if flag is not None and np.dot(new_theta, expert) > np.dot(flag['weight'], expert):
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+				print "New best candidate"
+				#print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(new_theta, expert)
+				K = k
+				k = (K + KK)/2
+			elif flag is None:
+				flag = {'weight': new_theta, 'policy': new_policy, 'value': new_value, 'unsafe': p_B_sum, 'feature': new_mu}
+				print "1st best candidate"
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(theta, expert)
+				K = k
+				k = (K + KK)/2
+
+			else:
+				print "Not the best"
+				print "Feature deviation from expert ", np.linalg.norm(new_mu - expert, ord = 2)
+				#print "Expert can get value ", np.dot(theta, expert)
+				k = (K + k)/2
+
+			print "Add new candidate policy expected feature", new_mu
+			
+			mu = [[k,  1 - k],[mu_Bs, [expert]]]
+			#grids, new_theta, new_policy, new_value = expert_train_v1(grids, mu, agent, starts, steps, epsilon=epsilon, iteration=30, gamma=gamma, start_theta= new_theta, MC = False, safety = None)
+			new_index, new_theta, w_delta_mu = expert_update_theta_v2(grids, mu, agent, steps, policies, mus, gamma, epsilon)
+			grids.w_features(new_theta)
+			print "Weight learnt from combined feature ", new_theta
+			new_policy, new_value = optimal_value(grids, steps = steps, epsilon=epsilon, gamma = gamma)
+			policies = policies + [new_policy]
+
+			new_mu, MU = optimal_feature(grids, starts, steps, new_policy, epsilon = epsilon, gamma=gamma)
+			print "Corresponding feature ", new_mu
+			#mus = mus + [new_mu]
+			
+			print "Model check ", new_theta
+			p_B_sum = output_model(grids, starts, new_policy, steps, unsafe, safety)
+			#exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(grids, agent, starts, grids.x_max*grids.y_max, new_policy, epochs= 5000, epsilon = 1e-3, gamma=gamma)
+			#p_B_sum = np.sum(np.reshape(p_B, [grids.y_max*grids.x_max]))/(len(starts))
+			print "Policy unsafe rate ", p_B_sum
+		else:
+			print "Model checking failed"
+			return None
+
+	print "Iteration ended, best safe theta ", flag['weight']
+	print "It's unsafe probability is ", flag['unsafe']
+	print "Distance to expert feature ", np.linalg.norm(expert - flag['feature'], ord= 2)
+	return grids, flag['weight'], flag['policy'], flag['value']
+
+def counterexample(grids, mu, gamma = 0.99, safety = 0.01, epsilon = 1e-5):
 	print "Removing last counterexample file"
 	os.system('rm counter_example.path')
 	while safety > epsilon :
 		file = open('grid_world.conf', 'w')
 		file.write('TASK counterexample\n')
 		file.write('PROBABILITY_BOUND ' + str(safety) + '\n')
-		file.write('DTMC_FILE grid_world.dtmc' + '\n')
+		file.write('DTMC_FILE grid_world.dtMC' + '\n')
 		file.write('REPRESENTATION pathset' + '\n')
 		file.write('SEARCH_ALGORITHM global' + '\n')
 		file.write('ABSTRACTION concrete' + '\n')
 		file.close()
-		cex_comics_timer(['sh', '/home/zekunzhou/workspace/Safety-AI-MDP/comics-1.0/comics.sh', './grid_world.conf'], 5.0)
+		cex_comics_timer(['sh', './comics-1.0/comics.sh', './grid_world.conf'], 5.0)
 		try:
 			file = open('counter_example.path', 'r')
 			print "Generated counterexample for ", safety
 			break
 		except:
 			print "No counterexample found for spec = ", safety, "shrinking down the safey"
-			safety = safety / 10.0
+			safety = safety / 2.0
 	if safety <= epsilon:
 		return None
 	mu_cex = np.zeros(len(grids.features[-1][-1]))
@@ -1424,33 +1728,46 @@ def counterexample(grids, gamma = 0.99, safety = 0.01, epsilon = 1e-5):
 	file.close()
 	for line in range(len(lines)-1):
 		path_strings.append(lines[line].split(' ')[0].split('->'))
-	for path_string in path_strings:
+	for path_string in range(len(path_strings)):
 		path = []
-		for state_string in path_string:
+		for state_string in path_strings[path_string]:
 			path.append(int(state_string))
-		path[0] = float(lines[line].split(' ')[2].split(')')[0])
+		path[0] = float(lines[path_string].split(' ')[2].split(')')[0])
 		paths.append(path)
 	for path in range(len(paths)):
 		p = paths[path][0]
-		mu = np.zeros(len(grids.features[-1][-1]))
-		for state in range(1, len(paths[path])):
-			y = paths[path][state]/grids.y_max
-			x = paths[path][state]%grids.y_max
-			mu = mu + (gamma**(state-1)) * grids.features[y][x] 
-		mu_cex = mu_cex + p * mu
+		mu_path = np.zeros(len(grids.features[-1][-1]))
+		for state in range(1, len(paths[path]) - 2):
+			if paths[path][state] > grids.y_max * grids.x_max - 1:
+				break
+			y = paths[path][state]/grids.x_max
+			x = paths[path][state]%grids.x_max
+			mu_path = mu_path + (gamma**(state - 1)) * grids.features[y][x] 
+		state = len(paths[path]) - 2
+		y = paths[path][state]/grids.x_max
+		x = paths[path][state]%grids.x_max
+		while gamma**(state - 1)  > epsilon:
+			mu_path = mu_path + (gamma**(state - 1)) * mu[y][x]
+			state = state + 1
+		mu_cex = mu_cex + p * mu_path
 		total_p = total_p + p
 	print "Counterexample for spec = ", safety, ": ",total_p
 	print "Counterexample feature ", mu_cex
 	mu_cex = mu_cex/total_p
+	print "Normalized Counterexample feature ", mu_cex
 	#os.system('rm counter_example.path')
 	return mu_cex		
 
-def output_model(grids, start, policy, steps = None, safety = 0.01):
+def output_model(grids, start, policy, steps = None, unsafe = None, safety = 0.01):
 	if steps is None:
 		steps  = grids.y_max * grids.x_max
 	print policy
 	transitions = []
-	target = grids.loc_min_0[0] * grids.x_max + grids.loc_min_0[1]
+	targets = []
+	if unsafe is None:
+		unsafe = grids.feature_states[1]
+	for state in unsafe:
+		targets.append(state[0] * grids.x_max + state[1])
 	for i in range(grids.y_max * grids.x_max):
 		y = i / grids.x_max
 		x = i % grids.x_max
@@ -1464,18 +1781,21 @@ def output_model(grids, start, policy, steps = None, safety = 0.01):
 	file = open('grid_world.conf', 'w')
 	file.write('TASK counterexample\n')
 	file.write('PROBABILITY_BOUND ' + str(safety) + '\n')
-	file.write('DTMC_FILE grid_world.dtmc' + '\n')
+	file.write('DTMC_FILE grid_world.dtMC' + '\n')
 	file.write('REPRESENTATION pathset' + '\n')
 	file.write('SEARCH_ALGORITHM global' + '\n')
 	file.write('ABSTRACTION concrete' + '\n')
 	file.close()
 	
 	initial = start[0][0] * grids.x_max + start[0][1]
-	file = open('grid_world.dtmc', 'w')
+	file = open('grid_world.dtMC', 'w')
 	file.write('STATES ' + str(grids.y_max * grids.x_max) + '\n')
 	file.write('TRANSITIONS ' + str(len(transitions)) + '\n')
 	file.write('INITIAL ' + str(initial) + '\n')
-	file.write('TARGET ' + str(target) + '\n')
+
+	for target in range(len(targets)):
+		file.write('TARGET ' + str(targets[target]) + '\n')
+
 	for transition in transitions:
 		file.write(transition)
 	file.close()
@@ -1488,18 +1808,23 @@ def output_model(grids, start, policy, steps = None, safety = 0.01):
 			file.write(str(j)+":")
 		file.write("\n")
 	file.close()
-	os.system('/home/zekunzhou/workspace/Safety-AI-MDP/prism-4.4.beta-src/src/demos/run')
+	os.system('./prism-4.4.beta-src/src/demos/run')
 	file = open('grid_world.pctl', 'w')
-	file.write('P=?[true U<=' + str(steps) + ' x=' + str(grids.loc_min_0[1]) + '&y=' + str(grids.loc_min_0[0])+ ']')
+	file.write('P=?[true U<=' + str(steps))
+	file.write(' (x=' + str(unsafe[0][1]) + '&y=' + str(unsafe[0][0]) + ')')
+	for target in range(1, len(targets)):
+		 file.write('|(x=' + str(unsafe[target][1]) + '&y=' + str(unsafe[target][0]) + ')')
+	#file.write('| (x > 0 & y <  x & x < 5)')
+	file.write(']')
 	file.close()
-	prob = model_check_prism(['/home/zekunzhou/workspace/Safety-AI-MDP/prism-4.4.beta-src/bin/prism', './grid_world.pm', './grid_world.pctl'], 5.0)
+	prob = model_check_prism(['./prism-4.4.beta-src/bin/prism', './grid_world.pm', './grid_world.pctl'], 5.0)
 	
 	if prob is not None:
 		return prob
 	else:
 		return None
 
-def model_check_prism(cmd = ['/home/zekunzhou/workspace/Safety-AI-MDP/prism-4.4.beta-src/bin/prism', './grid_world.pm', './grid_world.pctl'], timeout_sec = 5.0):
+def model_check_prism(cmd = ['./prism-4.4.beta-src/bin/prism', './grid_world.pm', './grid_world.pctl'], timeout_sec = 5.0):
 	kill_proc = lambda p: p.kill()
   	proc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   	timer = Timer(timeout_sec, kill_proc, [proc])
@@ -1525,7 +1850,7 @@ def model_check_prism(cmd = ['/home/zekunzhou/workspace/Safety-AI-MDP/prism-4.4.
 	
 	
 		
-def model_check_comics_timer(cmd = ['sh', '/home/zekunzhou/workspace/Safety-AI-MDP/comics-1.0/comics.sh', './grid_world.conf', '--only_model_checking'], timeout_sec = 5.0):
+def model_check_comics_timer(cmd = ['sh', './comics-1.0/comics.sh', './grid_world.conf', '--only_model_checking'], timeout_sec = 5.0):
   	kill_proc = lambda p: os.system('kill -9 $(pidof comics)')
   	proc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   	timer = Timer(timeout_sec, kill_proc, [proc])
@@ -1547,7 +1872,7 @@ def model_check_comics_timer(cmd = ['sh', '/home/zekunzhou/workspace/Safety-AI-M
 		return None
 
   	
-def cex_comics_timer(cmd = ['sh', '/home/zekunzhou/workspace/comics-1.0/comics.sh', './grid_world.conf'], timeout_sec = 5.0):
+def cex_comics_timer(cmd = ['sh', './comics-1.0/comics.sh', './grid_world.conf'], timeout_sec = 5.0):
   	kill_proc = lambda p: os.system('kill -9 $(pidof comics)')
   	proc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   	timer = Timer(timeout_sec, kill_proc, [proc])
@@ -1562,7 +1887,10 @@ def cex_comics_timer(cmd = ['sh', '/home/zekunzhou/workspace/comics-1.0/comics.s
 
 	
 class train:
-	def __init__(self, grids= grid(12, 12, 0.6), starts = None, steps = float("inf"), epsilon = 1e-4, gamma = 0.6, iteration = 30, theta = np.array([1./3., 1./3., -3./3., 0.0])):
+	def __init__(self, grids= grid(12, 12, 0.6), starts = None, steps = float("inf"), epsilon = 1e-4, gamma = 0.6, iteration = 30, theta = None):
+		if theta is None:
+			theta = np.random.randint(100, size = len(grids.features[-1][-1]))
+			theta = np.array(theta).astype/np.linalg.norm(theta, ord=2)
 		if steps is None:
 			self.steps= float("inf")
 		else:
@@ -1580,7 +1908,9 @@ class train:
 		#pylab.ioff()
 		
 			
-	def synthesize(self, theta, starts= None, epsilon= None, safety = 0.01):
+	def synthesize(self, theta, starts= None, epsilon= None, unsafe = None, safety = 0.01):
+		if unsafe is None:
+			unsafe = self.grids.feature_states[1]
 		if epsilon is None:
 			epsilon = self.epsilon
 		policies = []
@@ -1589,6 +1919,7 @@ class train:
 		if theta is None:
 			theta = self.theta
 		theta = np.array(theta).astype(float)/np.linalg.norm(theta, ord=2)
+		print theta
 		'''
 		self.expert_policy, exp_mu = real_optimal(self.grids, self.agent, starts = starts, steps = self.steps, theta = theta, gamma = self.gamma, epsilon = epsilon)
 		print "real optimal policy"
@@ -1596,15 +1927,17 @@ class train:
 		print "real expected feature under optimal policy"
 		print exp_mu
 		demo_mu = exp_mu
-		exp_u_G, p_G, exp_u_B, p_B,_ = sample_feature(self.grids, self.agent, starts, self.grids.x_max * self.grids.y_max, self.expert_policy, epochs= 10000, epsilon = epsilon, gamma=self.gamma)
-		safety = np.sum(np.reshape(p_B, [self.grids.y_max * self.grids.x_max, 1]), 0)
-		print "Optimal policy unsafe rate ", safety
+
+		prob = output_model(self.grids, starts, self.expert_policy, self.steps, safety)
+		print "Optimal policy unsafe probability ", prob
 		'''
 
 		#print "unsafe path feature ", np.sum(np.reshape(exp_u_B, [self.grids.y_max * self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
 		#demo_mu = optimal_feature(self.grids, starts, self.steps, self.demo_policy, epsilon = self.epsilon, gamma=self.gamma)
 		#For [3 ,3], [6, 6], [4, 4], [7, 7]
 		#demo_mu = np.array([ 40.89036619,   0.64147873,   9.98327114,   0.])
+		#demo_mu = np.array([ 39.20935148,  52.6594597,   12.72442136,  12.82155975])
+		#theta = np.array([ 0.66812298,  0.70314324,  0.17274471,  0.17134912])
 		#For [3, 7], [7,3], [5, 5], [7, 7]
 		#demo_mu = np.array([ 44.075131,    43.41778817,   5.40566983,   1.61532099])
 		#demo_mu = np.array([ 44.075131,    43.41778817,   5.40566983,  0.0])
@@ -1617,7 +1950,7 @@ class train:
 
 		#For [1, 7], [7, 2], [3, 3], [4, 4]
 		#demo_mu = np.array([44.79990088, 45.11285122,   1.60969386,   0.        ])	
-		#safety = 0.005
+		#safety = 0.01
 		#theta = np.array([ 0.71021283,  0.70381664, -0.01548792,  0.])
 		#For [2, 6], [1, 6], [3, 3], [4, 4]
 		#demo_mu = np.array([ 63.22198067,  63.41995431,   3.7295239,    0.        ])
@@ -1628,44 +1961,52 @@ class train:
 		#For [7, 7], [7, 6], [4, 6], [6, 1]
 		#demo_mu = np.array([ 57.8561493,   57.68399681,   3.19279245,   4.25976904])
 		#theta = np.array([ 0.72613264,  0.64114756, -0.05041496,  0.24314507])
-
+		#For [7, 7], [7, 6], [1, 7], [7, 1] +++++
+		#demo_mu = np.array([ 58.58578586,  60.18166551,   0.22654301,   1.3339427 ])
+		#theta = np.array( [ 0.7489454,   0.66060699, -0.00105728,  0.0517501 ])
+		#For [7, 7], [7, 6], [2, 6], [6, 2] +++++
+		demo_mu = np.array([  57.58416513,  58.19742098,   1.10344096,   1.43110657])
+		theta = np.array( [  0.75168159,  0.65815897,  0.0338108,   0.02565913])
+		
+		#safety = 0.4
 		#self.demo_policy, _  = real_optimal(self.grids, self.agent, starts = starts, steps = self.steps, theta = theta, gamma = self.gamma, epsilon = epsilon)
-		safety = 0.01
+		#safety = 0.01
 		print "safety requirement is ", safety
-
+		
+		'''
 		if starts is None:
 			starts = np.array(self.starts)
-		if theta is None:
-			theta = self.theta/np.linalg.norm(self.theta, ord=2)
 		if epsilon is None:
 			epsilon = self.epsilon
 		again = 'y'
-		while(again != 'n' and again!= 'N'):
-			if again != 'y' and again!= 'Y':
-				print "Invalid input, exit...??"
+		while(again != 'n' and again!= 'n'):
+			if again != 'y' and again!= 'y':
+				print "invalid input, exit...??"
 				break
 			else:
 				start=starts[random.randint(0, len(starts)-1)]
-				expert_temp, again = demo(self.grids, self.agent, start, steps= self.steps, gamma=self.gamma, epsilon= epsilon)
+				expert_temp, again = demo(self.grids, self.agent, start, theta = theta, steps= self.steps, gamma=self.gamma, epsilon= epsilon)
 				self.expert.append(expert_temp)
 		starts = []
-		print "Start training..."
+		print "start training..."
 			
-		demo_mu = np.zeros(4)
+		demo_mu = np.zeros(len(self.grids.features[-1][-1]))
 		for i in range(len(self.expert)):
 			demo_mu = demo_mu + self.expert[i]["mu"] 
 			starts.append(self.expert[i]["trajectory"][0]["state"])
 		demo_mu = demo_mu/len(self.expert)	
-
 		print "expected demo mu is ", demo_mu
 		_, theta, self.demo_policy,_ = expert_train(self.grids, demo_mu, self.agent, epsilon = epsilon, starts = starts, steps= self.steps, iteration = 10, gamma=self.gamma, start_theta = None, MC = False)
 		print "theta learnt from demo mu ", theta
 		file = open('log', 'a')	
-		file.write("\nhuman demo for ultimate synthesis\n")
-		file.write(str(self.grids.loc_max_0))
-                file.write(str(self.grids.loc_max_1))
-                file.write(str(self.grids.loc_min_0))
-                file.write(str(self.grids.loc_min_1)+'\n')
+		file.write("\nlearnt from human demo before ultimate synthesis\n")
+		for i in self.grids.feature_states:
+			file.write(str(i))
+		file.write("\n")
+		#file.write(str(self.grids.loc_max_0))
+                #file.write(str(self.grids.loc_max_1))
+                #file.write(str(self.grids.loc_min_0))
+                #file.write(str(self.grids.loc_min_1)+'\n')
 
 		file.write("parameter "+ str(theta) + "\n")
 		for i in self.demo_policy:
@@ -1673,20 +2014,18 @@ class train:
 				file.write(str(j)+":")
 			file.write("\n")
 		file.write("\n")
-
-		prob = output_model(self.grids, starts, self.demo_policy, self.steps, safety)
-		print "model output finished ", prob
-		mu_cex =  counterexample(self.grids, self.gamma, safety, epsilon)
-		if mu_cex is not None:
-			print mu_cex
-		_, theta, self.demo_policy,_ = expert_synthesize2(self.grids, demo_mu, self.agent, epsilon = epsilon, starts = starts, steps= self.steps, iteration = self.iteration, gamma=self.gamma, start_theta = theta, MC = False, safety = safety)
+		'''
+		_, theta, self.demo_policy,_ = expert_synthesize(self.grids, demo_mu, self.agent, epsilon = epsilon, starts = starts, steps= self.steps, iteration = self.iteration, gamma=self.gamma, start_theta = theta, MC = False, unsafe = unsafe, safety = safety)
 		#draw_grids(self.grids.rewards, None)
 		file = open('log', 'a')	
 		file.write("\nleanrt from ultimate synthesis\n")
-		file.write(str(self.grids.loc_max_0))
-                file.write(str(self.grids.loc_max_1))
-                file.write(str(self.grids.loc_min_0))
-                file.write(str(self.grids.loc_min_1)+'\n')
+		for i in self.grids.feature_states:
+			file.write(str(i))
+		file.write("\n")
+		#file.write(str(self.grids.loc_max_0))
+                #file.write(str(self.grids.loc_max_1))
+                #file.write(str(self.grids.oc_min_0))
+                #file.write(str(self.grids.loc_min_1)+'\n')
 
 		file.write("parameter "+ str(theta) + "\n")
 		for i in self.demo_policy:
@@ -1719,10 +2058,13 @@ class train:
 		file=open('log', 'a')
 		file.write("learn from human policy\n")
 		
-		file.write(str(self.grids.loc_max_0))
-                file.write(str(self.grids.loc_max_1))
-                file.write(str(self.grids.loc_min_0))
-                file.write(str(self.grids.loc_min_1)+'\n')
+		for i in self.grids.feature_states:
+			file.write(str(i))
+		file.write("\n")
+		#file.write(str(self.grids.loc_max_0))
+                #file.write(str(self.grids.loc_max_1))
+                #file.write(str(self.grids.loc_min_0))
+                #file.write(str(self.grids.loc_min_1)+'\n')
 
 		for i in range(len(self.expert_policy)):
 			for j in range(len(self.expert_policy[i])):
@@ -1731,16 +2073,16 @@ class train:
 		exp_mu = optimal_feature(self.grids, starts, self.steps, self.expert_policy, epsilon = self.epsilon, gamma=self.gamma)
 		print "analytical feature" + str(exp_mu)
 		if safety is True:
-                	exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(self.grids, self.agent, starts, self.steps, self.expert_policy, epochs= 10000, epsilon = self.epsilon, gamma=self.gamma)
-			print exp_u_G[0][0]
-                        p_B_expert = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
-			mu_B = np.sum(np.reshape(exp_u_B, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])])* np.reshape(p_B, [self.grids.y_max*self.grids.x_max, 1]), 0)
-			mu_G = np.sum(np.reshape(exp_u_G, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
-			print "expected failure path feature ", mu_B
-			print "expected successful path feature ", mu_G
-			exp_mu = mu_G
-		#exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.grids.x_max * self.grids.y_max, self.expert_policy, epochs= 5000, epsilon = 1e-3, gamma=self.gamma)
-		#exp_mu = np.sum(np.reshape(exp_u_G, [self.grids.y_max * self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
+                	exp_u_g, p_g, exp_u_b, p_b, _ = sample_feature(self.grids, self.agent, starts, self.steps, self.expert_policy, epochs= 10000, epsilon = self.epsilon, gamma=self.gamma)
+			print exp_u_g[0][0]
+                        p_b_expert = np.sum(np.reshape(p_b, [self.grids.y_max*self.grids.x_max]))/(len(starts))
+			mu_b = np.sum(np.reshape(exp_u_b, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])])* np.reshape(p_b, [self.grids.y_max*self.grids.x_max, 1]), 0)
+			mu_g = np.sum(np.reshape(exp_u_g, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
+			print "expected failure path feature ", mu_b
+			print "expected successful path feature ", mu_g
+			exp_mu = mu_g
+		#exp_u_g, p_g, exp_u_b, p_b = sample_feature(self.grids, self.agent, starts, self.grids.x_max * self.grids.y_max, self.expert_policy, epochs= 5000, epsilon = 1e-3, gamma=self.gamma)
+		#exp_mu = np.sum(np.reshape(exp_u_g, [self.grids.y_max * self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
 		#print "monte carlo " + str(exp_mu)
 		file.write(str(exp_mu) + '\n')
 		file.close()	
@@ -1751,18 +2093,18 @@ class train:
 				if policy[i, j] != self.expert_policy[i, j]:
 					print "feature matched policy is different with expert"
 					'''
-					exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
-					p_B_sum = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
-					print "feature matched policy unsafe rate ", p_B_sum						   '''
+					exp_u_g, p_g, exp_u_b, p_b = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
+					p_b_sum = np.sum(np.reshape(p_b, [self.grids.y_max*self.grids.x_max]))/(len(starts))
+					print "feature matched policy unsafe rate ", p_b_sum						   '''
 					file = open('log', 'a')
 					file.write("learnt policy is different\n")
-					#file.write(str(p_B_expert)+'\n')	
+					#file.write(str(p_b_expert)+'\n')	
 					file.write(str(theta)+'\n')
 					for i in policy:
 						for j in i:
 							file.write(str(j)+":")
 						file.write("\n")
-					#file.write(str(p_B_sum)+'\n')
+					#file.write(str(p_b_sum)+'\n')
 				
 					file.close()
 					return policy
@@ -1788,8 +2130,8 @@ class train:
 		if expert_theta is None:
 			expert_theta = self.theta/np.linalg.norm(self.theta, ord=2)
 		else:
-			expert_theta = theta/np.linalg.norm(theta, ord=2)
-		print "feature states are "+ str(self.grids.loc_max_0)+str(self.grids.loc_max_1)+str(self.grids.loc_min_0)+str(self.grids.loc_min_1)
+			expert_theta = expert_theta/np.linalg.norm(expert_theta, ord=2)
+		#print "feature states are "+ str(self.grids.loc_max_0)+str(self.grids.loc_max_1)+str(self.grids.loc_min_0)+str(self.grids.loc_min_1)
 		print "ground true weight is ", expert_theta
 		self.expert_policy, exp_mu =real_optimal(self.grids, self.agent, starts = starts,  steps = self.steps, theta = expert_theta, gamma=self.gamma, epsilon = self.epsilon)		
 		#print self.grids.rewards
@@ -1798,20 +2140,23 @@ class train:
 	
 		if safety is True:
 			safety = 0.01
-		prob = output_model(self.grids, starts, self.expert_policy, safety)
+		prob = output_model(self.grids, starts, self.expert_policy, self.steps, unsafe, safety)
 		print "model output finished ", prob
 		mu_cex =  counterexample(self.grids, self.gamma, safety, epsilon)
 		if mu_cex is not None:
 			print mu_cex
 		else:
-			print "No counterexample found. Comics says that it's safe!!!!!!!!!!!"
+			print "no counterexample found. comics says that it's safe!!!!!!!!!!!"
 			
 
 		file = open('log', 'a')
-		file.write(str(self.grids.loc_max_0))
-		file.write(str(self.grids.loc_max_1))
-		file.write(str(self.grids.loc_min_0))
-		file.write(str(self.grids.loc_min_1)+'\n')
+		for i in self.grids.feature_states:
+			file.write(str(i))
+		file.write("\n")
+		#file.write(str(self.grids.loc_max_0))
+		#file.write(str(self.grids.loc_max_1))
+		#file.write(str(self.grids.loc_min_0))
+		#file.write(str(self.grids.loc_min_1)+'\n')
 		file.write(str(expert_theta) + '\n')
 		file.write(str(exp_mu) + '\n')
 		file.close()
@@ -1832,17 +2177,16 @@ class train:
 		       	 				
 			demo_mu = optimal_feature(self.grids, starts, self.steps, self.expert_policy, epsilon = self.epsilon, gamma=self.gamma)
 			if safety is True:
-                		exp_u_G, p_G, exp_u_B, p_B, _ = sample_feature(self.grids, self.agent, starts, self.steps, self.expert_policy, epochs= 10000, epsilon = self.epsilon, gamma=self.gamma)
-                        	p_B_expert = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
-				mu_B = np.sum(np.reshape(exp_u_B, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])])* np.reshape(p_B, [self.grids.y_max*self.grids.x_max, 1]), 0)
-				mu_G = np.sum(np.reshape(exp_u_G, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
-				print "expected failure path feature ", mu_B
-				#demo_mu = (exp_mu - mu_B)/(1 - p_B_expert)
-				demo_mu = mu_G
-				print "expected succesful path feature ", demo_mu
+				prob = output_model(self.grids, starts, self.expert_policy, self.steps, unsafe, safety)
+				print "model output finished ", prob
+				mu_cex =  counterexample(self.grids, self.gamma, safety, epsilon)
+				if mu_cex is not None:
+					print mu_cex
+				else:
+					print "no counterexample found. comics says that it's safe!!!!!!!!!!!"
+				mu_g = np.sum(np.reshape(exp_u_g, [self.grids.y_max*self.grids.x_max, len(self.grids.features[-1][-1])]), 0)
                                 file = open('log', 'a')
-                                file.write("policy future reach unsafe state rate "+ str(p_B_expert) + "\n") 
-                                print "policy future reach unsafe state rate ", p_B_expert
+                                file.write("policy future reach unsafe state rate "+ str(prob) + "\n") 
                                 file.close()      
 
 				
@@ -1894,8 +2238,8 @@ class train:
 			
 		'''
 		if safety is not None:
-			safety = p_B_expert
-		print "original expert policy's unsafe rate ", p_B_expert
+			safety = p_b_expert
+		print "original expert policy's unsafe rate ", p_b_expert
 
 		file = open('expert_policy', 'w')
 		for i in self.expert_policy:
@@ -1914,16 +2258,16 @@ class train:
 		print policy_temp
 		mu_temp = optimal_feature(self.grids, starts, self.steps, policy_temp, epsilon = self.epsilon, gamma=self.gamma)
 		print "hand-modified policy feature error", np.linalg.norm(exp_mu-mu_temp, ord=2)
-		exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, policy_temp, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
-		p_B_sum = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
-		print "new policy unsafe rate ", p_B_sum
+		exp_u_g, p_g, exp_u_b, p_b = sample_feature(self.grids, self.agent, starts, self.steps, policy_temp, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
+		p_b_sum = np.sum(np.reshape(p_b, [self.grids.y_max*self.grids.x_max]))/(len(starts))
+		print "new policy unsafe rate ", p_b_sum
 			
 
-		pylab.title('Real Reward. Try real expert? Type [y/n] in the terminal')
+		pylab.title('real reward. try real expert? type [y/n] in the terminal')
 		draw_grids(self.grids.rewards, None)
 
 		pylab.ion()
-		pylab.title('Rewards from expert train, close to continue')
+		pylab.title('rewards from expert train, close to continue')
 		'''
 		return self.expert_policy
 
@@ -1934,9 +2278,9 @@ class train:
 				if policy[i, j] != self.expert_policy[i, j]:
 					print "feature matched policy is different with expert"
 					'''
-					exp_u_G, p_G, exp_u_B, p_B = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
-					p_B_sum = np.sum(np.reshape(p_B, [self.grids.y_max*self.grids.x_max]))/(len(starts))
-					print "feature matched policy unsafe rate ", p_B_sum						   '''
+					exp_u_g, p_g, exp_u_b, p_b = sample_feature(self.grids, self.agent, starts, self.steps, policy, epochs= 5000, epsilon = self.epsilon, gamma=self.gamma)
+					p_b_sum = np.sum(np.reshape(p_b, [self.grids.y_max*self.grids.x_max]))/(len(starts))
+					print "feature matched policy unsafe rate ", p_b_sum						   '''
 		return policy
 	
 	
@@ -1955,18 +2299,18 @@ class train:
 		#file.close()
 
 		again = 'y'
-		while(again != 'n' and again!= 'N'):
-			if again != 'y' and again!= 'Y':
-				print "Invalid input, exit...??"
+		while(again != 'n' and again!= 'n'):
+			if again != 'y' and again!= 'y':
+				print "invalid input, exit...??"
 				break
 			else:
 				start=starts[random.randint(0, len(starts)-1)]
 				expert_temp, again = demo(self.grids, self.agent, start, steps= self.steps, gamma=self.gamma, epsilon= epsilon)
 				self.expert.append(expert_temp)
 		starts = []
-		print "Start training..."
+		print "start training..."
 			
-		demo_mu = np.zeros(4)
+		demo_mu = np.zeros(len(self.grids.features[-1][-1]))
 		for i in range(len(self.expert)):
 			demo_mu = demo_mu + self.expert[i]["mu"] 
 			starts.append(self.expert[i]["trajectory"][0]["state"])
@@ -1977,10 +2321,13 @@ class train:
 		draw_grids(self.grids.rewards, None)
 		file = open('log', 'a')	
 		file.write("leanrt from human demo\n")
-		file.write(str(self.grids.loc_max_0))
-                file.write(str(self.grids.loc_max_1))
-                file.write(str(self.grids.loc_min_0))
-                file.write(str(self.grids.loc_min_1)+'\n')
+		for i in self.grids.feature_states:
+			file.write(str(i))
+		file.write("\n")
+		#file.write(str(self.grids.loc_max_0))
+                #file.write(str(self.grids.loc_max_1))
+                #file.write(str(self.grids.loc_min_0))
+                #file.write(str(self.grids.loc_min_1)+'\n')
 
 		file.write("parameter "+ str(theta) + "\n")
 		for i in self.demo_policy:
@@ -1990,8 +2337,8 @@ class train:
 		file.close()
 		
 		while True:
-			real=raw_input("Try modified policy? [Y/N]")
-			if real == 'Y' or real == 'y':
+			real=raw_input("try modified policy? [y/n]")
+			if real == 'y' or real == 'y':
 				i = -2
 				j = 0
 				file = open('demo_policy', 'r')
@@ -2008,7 +2355,7 @@ class train:
 				for i in range(len(policy)):
 					for j in range(len(policy[i])):
 						if policy[i, j] != self.demo_policy[i, j]:
-							print "And not so well learnt the modified policy"
+							print "and not so well learnt the modified policy"
 							i = len(policy)
 							break
 				print "parameter learnt from modified policy is ", theta

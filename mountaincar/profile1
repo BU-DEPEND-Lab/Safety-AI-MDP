@@ -1,0 +1,136 @@
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   36.180   36.180 <string>:1(<module>)
+        2    0.000    0.000    0.000    0.000 __init__.py:198(mul)
+        2    0.000    0.000    0.000    0.000 __init__.py:220(div)
+        4    0.000    0.000    0.000    0.000 __init__.py:23(find_module)
+        2    0.000    0.000    0.000    0.000 _methods.py:31(_sum)
+        2    0.000    0.000    0.000    0.000 _methods.py:37(_any)
+      7/1    0.000    0.000    0.000    0.000 arrayprint.py:220(_leading_trailing)
+        7    0.000    0.000    0.000    0.000 arrayprint.py:256(_get_formatdict)
+        7    0.000    0.000    0.000    0.000 arrayprint.py:260(<lambda>)
+        7    0.000    0.000    0.000    0.000 arrayprint.py:299(_get_format_function)
+        7    0.000    0.000    0.004    0.001 arrayprint.py:343(_array2string)
+        7    0.000    0.000    0.004    0.001 arrayprint.py:381(wrapper)
+        7    0.000    0.000    0.004    0.001 arrayprint.py:399(array2string)
+        1    0.000    0.000    0.000    0.000 arrayprint.py:45(product)
+      258    0.000    0.000    0.000    0.000 arrayprint.py:527(_extendLine)
+     13/7    0.000    0.000    0.003    0.000 arrayprint.py:535(_formatArray)
+        7    0.000    0.000    0.000    0.000 arrayprint.py:603(__init__)
+        7    0.000    0.000    0.000    0.000 arrayprint.py:617(fillFormat)
+      252    0.001    0.000    0.003    0.000 arrayprint.py:668(__call__)
+       36    0.000    0.000    0.000    0.000 arrayprint.py:702(_digits)
+    10000    1.472    0.000    1.494    0.000 car.py:13(move)
+       16    0.000    0.000    0.002    0.000 coneprog.py:1130(f6_no_ir)
+        8    0.000    0.000    0.003    0.000 coneprog.py:1211(f6)
+        1    0.001    0.001    0.005    0.005 coneprog.py:31(conelp)
+       26    0.000    0.000    0.000    0.000 coneprog.py:531(Gf)
+       26    0.000    0.000    0.000    0.000 coneprog.py:549(Af)
+        5    0.000    0.000    0.000    0.000 coneprog.py:584(kktsolver)
+        8    0.000    0.000    0.000    0.000 coneprog.py:599(res)
+       34    0.000    0.000    0.000    0.000 coneprog.py:638(xcopy)
+       34    0.000    0.000    0.000    0.000 coneprog.py:645(ycopy)
+        6    0.000    0.000    0.000    0.000 fromnumeric.py:138(reshape)
+        6    0.000    0.000    0.000    0.000 fromnumeric.py:1380(ravel)
+        2    0.000    0.000    0.000    0.000 fromnumeric.py:1730(sum)
+        2    0.000    0.000    0.000    0.000 fromnumeric.py:1886(any)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:42(_wrapit)
+    19383    0.004    0.000    0.014    0.000 fromnumeric.py:504(transpose)
+    19390    0.006    0.000    0.010    0.000 fromnumeric.py:55(_wrapfunc)
+        1    0.000    0.000    0.000    0.000 fromnumeric.py:910(argmax)
+        3    0.017    0.006    0.045    0.015 grid_v2.py:86(w_features)
+    10008    0.002    0.000    0.004    0.000 linalg.py:111(isComplexType)
+    10008    0.034    0.000    0.058    0.000 linalg.py:2014(norm)
+        1    0.000    0.000    0.000    0.000 misc.py:1570(kkt_qr)
+        5    0.000    0.000    0.000    0.000 misc.py:1614(factor)
+       22    0.000    0.000    0.003    0.000 misc.py:1629(solve)
+        1    0.000    0.000    0.000    0.000 misc.py:20(<module>)
+        1    0.000    0.000    0.000    0.000 misc.py:250(compute_scaling)
+        4    0.000    0.000    0.000    0.000 misc.py:422(update_scaling)
+       13    0.000    0.000    0.000    0.000 misc.py:757(snrm2)
+       26    0.000    0.000    0.000    0.000 misc.py:801(sgemv)
+        4    0.000    0.000    0.000    0.000 misc.py:835(jdot)
+       14    0.000    0.000    0.000    0.000 misc.py:848(jnrm2)
+        4    0.000    0.000    0.000    0.000 misc.py:945(ssqr)
+        7    0.000    0.000    0.004    0.001 numeric.py:1905(array_str)
+      518    0.000    0.000    0.001    0.000 numeric.py:2667(seterr)
+      518    0.000    0.000    0.000    0.000 numeric.py:2767(geterr)
+      259    0.000    0.000    0.000    0.000 numeric.py:3060(__init__)
+      259    0.000    0.000    0.001    0.000 numeric.py:3064(__enter__)
+      259    0.000    0.000    0.001    0.000 numeric.py:3069(__exit__)
+    10015    0.004    0.000    0.005    0.000 numeric.py:463(asarray)
+        8    0.000    0.000    0.000    0.000 numeric.py:534(asanyarray)
+       12    0.000    0.000    0.000    0.000 six.py:184(find_module)
+        2    0.132    0.066    1.697    0.848 update.py:147(sample_feature)
+        2   33.512   16.756   34.428   17.214 update.py:258(optimal_value)
+        1    0.002    0.002   36.180   36.180 update.py:353(expert_train)
+        1    0.000    0.000    0.005    0.005 update.py:517(expert_update_theta)
+        7    0.000    0.000    0.000    0.000 {_functools.reduce}
+    12924    0.001    0.000    0.001    0.000 {abs}
+       52    0.000    0.000    0.000    0.000 {cvxopt.base.gemv}
+       12    0.000    0.000    0.000    0.000 {cvxopt.base.sqrt}
+      327    0.000    0.000    0.000    0.000 {cvxopt.blas.axpy}
+      233    0.000    0.000    0.000    0.000 {cvxopt.blas.copy}
+       95    0.000    0.000    0.000    0.000 {cvxopt.blas.dot}
+       44    0.000    0.000    0.000    0.000 {cvxopt.blas.gemv}
+       26    0.000    0.000    0.000    0.000 {cvxopt.blas.nrm2}
+      251    0.000    0.000    0.000    0.000 {cvxopt.blas.scal}
+       20    0.000    0.000    0.000    0.000 {cvxopt.blas.tbmv}
+       16    0.000    0.000    0.000    0.000 {cvxopt.blas.tbsv}
+        6    0.000    0.000    0.000    0.000 {cvxopt.lapack.geqrf}
+       93    0.003    0.000    0.003    0.000 {cvxopt.lapack.ormqr}
+       88    0.000    0.000    0.000    0.000 {cvxopt.lapack.trtrs}
+       20    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.max_step}
+        5    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.pack2}
+       22    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.pack}
+       24    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.scale2}
+       71    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.scale}
+       61    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.sdot}
+       16    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.sinv}
+       12    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.sprod}
+       13    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.trisc}
+       13    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.triusc}
+       22    0.000    0.000    0.000    0.000 {cvxopt.misc_solvers.unpack}
+    19391    0.002    0.000    0.002    0.000 {getattr}
+        1    0.000    0.000    0.000    0.000 {globals}
+        7    0.000    0.000    0.000    0.000 {id}
+       21    0.000    0.000    0.000    0.000 {isinstance}
+    20044    0.004    0.000    0.004    0.000 {issubclass}
+    50635    0.003    0.000    0.003    0.000 {len}
+      102    0.000    0.000    0.000    0.000 {math.sqrt}
+       36    0.000    0.000    0.000    0.000 {max}
+        7    0.000    0.000    0.000    0.000 {method 'add' of 'set' objects}
+        2    0.000    0.000    0.000    0.000 {method 'any' of 'numpy.ndarray' objects}
+    20079    0.002    0.000    0.002    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+        7    0.000    0.000    0.000    0.000 {method 'compress' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        7    0.000    0.000    0.000    0.000 {method 'discard' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 {method 'extend' of 'list' objects}
+        9    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        4    0.000    0.000    0.000    0.000 {method 'partition' of 'str' objects}
+      259    0.000    0.000    0.000    0.000 {method 'pop' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {method 'randint' of 'mtrand.RandomState' objects}
+    10000    0.001    0.000    0.001    0.000 {method 'random' of '_random.Random' objects}
+    10014    0.005    0.000    0.005    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+       16    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        7    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+      681    0.000    0.000    0.000    0.000 {method 'rstrip' of 'str' objects}
+    19383    0.002    0.000    0.002    0.000 {method 'transpose' of 'numpy.ndarray' objects}
+       12    0.000    0.000    0.000    0.000 {min}
+    69411    0.017    0.000    0.017    0.000 {numpy.core.multiarray.array}
+        7    0.000    0.000    0.000    0.000 {numpy.core.multiarray.concatenate}
+    29392    0.015    0.000    0.015    0.000 {numpy.core.multiarray.dot}
+       21    0.000    0.000    0.000    0.000 {numpy.core.multiarray.zeros}
+     1036    0.000    0.000    0.000    0.000 {numpy.core.umath.geterrobj}
+      518    0.000    0.000    0.000    0.000 {numpy.core.umath.seterrobj}
+  2854219    0.933    0.000    0.933    0.000 {range}
+        4    0.000    0.000    0.000    0.000 {reduce}
+      139    0.000    0.000    0.000    0.000 {sum}
+        7    0.000    0.000    0.000    0.000 {thread.get_ident}
+
+
+
+
+
+
