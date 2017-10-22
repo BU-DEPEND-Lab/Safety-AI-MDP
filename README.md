@@ -5,14 +5,20 @@ Prerequisites:
   
   AI-Toolbox: https://github.com/Svalorzen/AI-Toolbox
  
- Run gridworld: $cd ./saal
+ Run gridworld: 
+            
+              $cd ./saal
  
-                $python run.py
+              $python run.py
                 
- Run mountaincar: $cd ./saal
+ Run mountaincar: 
+    
+                $cd ./saal
  
                 $python mountaincar.py
                 
- Run cartpole: $cd ./saal
+ Run cartpole: 
+              
+                $cd ./saal
  
                 $python cartpole.py
